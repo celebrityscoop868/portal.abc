@@ -1,10 +1,9 @@
-// firebase.js - VERSIÓN CORREGIDA
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
-// Configuración directa (sin variables de entorno)
+// Configuración FIJA (sin variables de entorno)
 const firebaseConfig = {
   apiKey: "AIzaSyA6kZ4LL22vPr5XeTCdtcnCqfs_2g_jjqw",
   authDomain: "sunpower-portal.firebaseapp.com",
@@ -22,8 +21,9 @@ try {
   auth = getAuth(app);
   db = getFirestore(app);
   storage = getStorage(app);
+  console.log("✅ Firebase inicializado correctamente");
 } catch (e) {
-  console.error("Firebase init error:", e);
+  console.error("❌ Error inicializando Firebase:", e);
 }
 
 export { app, auth, db, storage };
