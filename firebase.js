@@ -1,45 +1,35 @@
-// ===============================
-// Firebase (App/Auth/Firestore/Storage)
-// ===============================
-
-// Firebase core
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-
-// Auth
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-
-// Firestore
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-// Storage
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
-/**
- * ✅ TU CONFIG REAL
- * Nota: storageBucket SIEMPRE debe ser *.appspot.com
- */
 const firebaseConfig = {
-  apiKey: "AIzaSyAFWdMujLQ8dDcNhjmtMVOTE7CED8DAI10",
-  authDomain: "portal-empleado-df279.firebaseapp.com",
-  projectId: "portal-empleado-df279",
-
-  // ✅ BUCKET REAL (CORRECTO)
-  storageBucket: "portal-empleado-df279.appspot.com",
-
-  messagingSenderId: "641787761578",
-  appId: "1:641787761578:web:912e2437974c7cb46951d3",
-  measurementId: "G-QS8HGPTNRL"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Init
-export const app = initializeApp(firebaseConfig);
+const fallbackConfig = {
+  apiKey: "AIzaSyA6kZ4LL22vPr5XeTCdtcnCqfs_2g_jjqw",
+  authDomain: "sunpower-portal.firebaseapp.com",
+  projectId: "sunpower-portal",
+  storageBucket: "sunpower-portal.firebasestorage.app",
+  messagingSenderId: "557829218180",
+  appId: "1:557829218180:web:f5ae1a4362e88a271e87d1",
+  measurementId: "G-70553ET048"
+};
+
+const finalConfig = import.meta.env.VITE_FIREBASE_API_KEY ? firebaseConfig : fallbackConfig;
+
+export const app = initializeApp(finalConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-
-// ✅ Storage amarrado al mismo app
 export const storage = getStorage(app);
 
-// Used by app (tu app siempre “real” aquí)
 export function isFirebaseConfigured() {
   return true;
 }
