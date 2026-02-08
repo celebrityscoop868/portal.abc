@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>Employee Portal</title>
+  <link rel="stylesheet" href="./assets/app.css?v=20260205-1"/>
+<base target="_blank">
+</head>
+
+<body class="portal">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="brand-mini">
+        <div class="brand-dot"></div>
+        <div class="brand-title">Employee Portal</div>
+      </div>
+
+      <!-- Employee badge -->
+      <div class="topbar-pill" id="userBadge">Loading…</div>
+    </div>
+
+    <div class="topbar-right">
+      <!-- Hidden unless admin (JS decides) -->
+      <button class="btn sm ghost" id="btnAdminGo" type="button" style="display:none;">Admin</button>
+      <button class="btn sm ghost" id="btnLogout" type="button">Log out</button>
+    </div>
+  </header>
+
+  <!-- Drawer overlay (compat only; stays unused if you keep bottomnav on mobile) -->
+  <div id="drawerOverlay" class="drawer-overlay"></div>
+
+  <!-- ✅ Desktop shell: sidebar + content -->
+  <div class="shell">
+
+    <!-- SIDEBAR (desktop) -->
+    <aside class="sidebar" id="sidebar">
+      <nav class="nav" id="nav">
+        <a class="nav-item" href="#home" data-route="home">Home</a>
+        <a class="nav-item" href="#progress" data-route="progress">Progress</a>
+
+        <a class="nav-item" href="#shift_selection" data-route="shift_selection">Shift Selection</a>
+        <a class="nav-item" href="#footwearpolicy" data-route="footwearpolicy">Safety Footwear</a>
+        <a class="nav-item" href="#i9" data-route="i9">I-9</a>
+        <a class="nav-item" href="#documents" data-route="documents">Documents</a>
+        <a class="nav-item" href="#firstdayinfo" data-route="firstdayinfo">First Day Info</a>
+
+        <a class="nav-item" href="#schedule" data-route="schedule">Schedule</a>
+        <a class="nav-item" href="#hours" data-route="hours">My Hours</a>
+        <a class="nav-item" href="#payroll" data-route="payroll">Payroll</a>
+        <a class="nav-item" href="#timeoff" data-route="timeoff">Time Off</a>
+        <a class="nav-item" href="#deposit" data-route="deposit">Direct Deposit</a>
+
+        <a class="nav-item" href="#notifications" data-route="notifications">Notifications</a>
+        <a class="nav-item" href="#help" data-route="help">Help</a>
+        <a class="nav-item" href="#more" data-route="more">More</a>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="small muted">Status</div>
+        <div class="status-chip" id="statusShift">offline</div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="content">
+      <section class="page-head">
+        <h1 id="pageTitle">Home</h1>
+        <div class="subhead" id="pageSub">Quick access to your schedule, time, pay, and support.</div>
+      </section>
+
+      <!-- employee.js controls this (show only in progress route) -->
+      <section id="stagebar"></section>
+
+      <!-- employee.js renders here -->
+      <section id="pageBody"></section>
+
+      <footer class="footer">
+        <span class="muted">SunPower Corporation</span>
+        • <span class="muted" id="build">Connected</span>
+      </footer>
+    </main>
+
+  </div>
+<!-- ✅ BOTTOM NAV (mobile app style) -->
+<nav id="bottomNav" class="bottomnav">
+
+  <a class="nav-item bn-item" href="#home" data-route="home" aria-label="Home">
+    <div class="bn-ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" class="bn-svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 10L12 3l9 7"/>
+        <path d="M5 10v10h14V10"/>
+      </svg>
+    </div>
+    <div class="bn-txt">Home</div>
+  </a>
+
+  <a class="nav-item bn-item" href="#schedule" data-route="schedule" aria-label="Schedule">
+    <div class="bn-ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" class="bn-svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="5" width="18" height="16" rx="2"/>
+        <path d="M16 3v4M8 3v4M3 11h18"/>
+      </svg>
+    </div>
+    <div class="bn-txt">Schedule</div>
+  </a>
+
+  <a class="nav-item bn-item" href="#pay" data-route="pay" aria-label="Pay">
+    <div class="bn-ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" class="bn-svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="6" width="20" height="12" rx="2"/>
+        <path d="M2 10h20"/>
+        <path d="M6 14h5"/>
+      </svg>
+    </div>
+    <div class="bn-txt">Pay</div>
+  </a>
+
+  <a class="nav-item bn-item" href="#benefits" data-route="benefits" aria-label="Benefits">
+    <div class="bn-ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" class="bn-svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3l7 4v5c0 5-3.5 7-7 9-3.5-2-7-4-7-9V7l7-4z"/>
+        <path d="M9.5 12.2l1.8 1.8 3.7-3.7"/>
+      </svg>
+    </div>
+    <div class="bn-txt">Benefits</div>
+  </a>
+
+  <a class="nav-item bn-item" href="#more" data-route="more" aria-label="More">
+    <div class="bn-ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" class="bn-svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </div>
+    <div class="bn-txt">More</div>
+  </a>
+
+</nav>
+
+  <!-- APP INIT -->
+  <script type="module">
+    import { uiActiveNav, uiWireGlobalTaps } from "./assets/ui.js";
+    import { signOutNow } from "./assets/auth.js";
+    import { initEmployeeApp } from "./assets/employee.js";
+
+    uiWireGlobalTaps();
+
+    document.getElementById("btnLogout").onclick = async () => {
+      await signOutNow();
+      window.location.href = "./index.html";
+    };
+
+    document.getElementById("btnAdminGo").onclick = () => {
+      window.location.href = "./admin.html";
+    };
+
+    await initEmployeeApp();
+
+    uiActiveNav();
+    window.addEventListener("hashchange", uiActiveNav);
+  </script>
+
+ 
+</body>
+</html>
