@@ -1,12 +1,3 @@
-// assets/ui.js
-// UI helpers (no framework)
-// - Toast (single instance)
-// - Active nav (href="#route" and/or data-route="route")
-// - Global tap delegation for tiles/buttons (fixes iOS tap issues)
-// - Empty states + skeletons
-// - Small builders (pill, row, section header)
-// - Optional drawer wiring (only if you use a drawer)
-
 export function uiSetText(el, text) {
   if (!el) return;
   el.textContent = text ?? "";
@@ -17,9 +8,6 @@ export function uiShow(el, show) {
   el.style.display = show ? "" : "none";
 }
 
-/* =========================
-   HTML SAFETY
-   ========================= */
 export function escapeHtml(s) {
   return String(s ?? "")
     .replaceAll("&", "&amp;")
@@ -29,9 +17,6 @@ export function escapeHtml(s) {
     .replaceAll("'", "&#039;");
 }
 
-/* =========================
-   ROUTES
-   ========================= */
 export function uiRoute() {
   return (location.hash || "#progress").replace("#", "").trim().toLowerCase();
 }
@@ -41,9 +26,6 @@ export function uiGo(route) {
   location.hash = "#" + (r || "progress");
 }
 
-/* =========================
-   TOAST
-   ========================= */
 let __toastEl = null;
 let __toastHideTimer = null;
 
@@ -54,22 +36,43 @@ export function uiToast(text, ms = 2200) {
   if (!__toastEl) {
     __toastEl = document.createElement("div");
     __toastEl.className = "toast";
+    __toastEl.style.cssText = `
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #0b1220;
+      color: white;
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      z-index: 9999;
+      opacity: 0;
+      transition: all 0.3s ease;
+      max-width: 90vw;
+      text-align: center;
+    `;
     document.body.appendChild(__toastEl);
   }
 
   if (__toastHideTimer) clearTimeout(__toastHideTimer);
 
   __toastEl.textContent = msg;
-  requestAnimationFrame(() => __toastEl.classList.add("show"));
+  requestAnimationFrame(() => {
+    __toastEl.style.transform = "translateX(-50%) translateY(0)";
+    __toastEl.style.opacity = "1";
+  });
 
   __toastHideTimer = setTimeout(() => {
-    __toastEl?.classList.remove("show");
+    if (__toastEl) {
+      __toastEl.style.transform = "translateX(-50%) translateY(100px)";
+      __toastEl.style.opacity = "0";
+    }
   }, ms);
 }
 
-/* =========================
-   ACTIVE NAV
-   ========================= */
 export function uiActiveNav() {
   const route = uiRoute();
 
@@ -82,19 +85,6 @@ export function uiActiveNav() {
   });
 }
 
-/* =========================
-   GLOBAL ACTIONS (for tiles/buttons)
-   =========================
-   Use in HTML:
-     <div class="tile" data-route="timecard">...</div>
-     <button data-route="report-absence">...</button>
-
-   Or actions:
-     <div data-action="correct-punch"></div>
-     Then register handler:
-       uiRegisterAction("correct-punch", () => {...});
-       uiRegisterAction("report-absence", () => uiGo("report-absence"));
-*/
 const __actions = new Map();
 
 export function uiRegisterAction(name, fn) {
@@ -107,9 +97,6 @@ export function uiClearActions() {
   __actions.clear();
 }
 
-/* =========================
-   TAP / CLICK DELEGATION (iOS-safe)
-   ========================= */
 let __tapWired = false;
 
 export function uiWireGlobalTaps({
@@ -121,7 +108,6 @@ export function uiWireGlobalTaps({
   if (__tapWired) return;
   __tapWired = true;
 
-  // Avoid 300ms delay / weird highlights in old iOS
   try {
     document.body.style.webkitTapHighlightColor = "transparent";
     document.body.style.touchAction = "manipulation";
@@ -131,11 +117,9 @@ export function uiWireGlobalTaps({
   let lastAt = 0;
 
   const handler = (ev) => {
-    // Find closest clickable
     const target = ev.target?.closest?.(allowSelectors.join(","));
     if (!target) return;
 
-    // If it’s a normal link to an external page, don’t hijack
     const href = target.getAttribute?.("href") || "";
     const isHashLink = href.startsWith("#");
 
@@ -145,7 +129,6 @@ export function uiWireGlobalTaps({
 
     const action = (target.getAttribute?.(actionAttr) || "").trim().toLowerCase();
 
-    // Debounce: prevents iOS from triggering twice (touchend + click)
     if (preventDouble) {
       const key = `${route}|${action}|${target.id || ""}|${target.className || ""}`;
       const now = Date.now();
@@ -158,15 +141,12 @@ export function uiWireGlobalTaps({
       lastAt = now;
     }
 
-    // If route present: navigate
     if (route) {
-      // Only prevent default if it’s a hash navigation or non-link element
       if (isHashLink || target.tagName !== "A") ev.preventDefault?.();
       uiGo(route);
       return;
     }
 
-    // If action present: run handler
     if (action && __actions.has(action)) {
       ev.preventDefault?.();
       try {
@@ -177,14 +157,9 @@ export function uiWireGlobalTaps({
     }
   };
 
-  // Use capture to beat overlays / stopPropagation inside components
- document.addEventListener("click", handler, true);
-// ❌ NO touchend: en iOS causa navegación al soltar después de scroll
+  document.addEventListener("click", handler, true);
 }
 
-/* =========================
-   OPTIONAL: DRAWER (only if you actually use it)
-   ========================= */
 let __drawerWired = false;
 
 function lockBodyScroll(lock) {
@@ -248,9 +223,6 @@ export function uiWireDrawer({
   return { open, close };
 }
 
-/* =========================
-   EMPTY / SKELETON
-   ========================= */
 export function uiEmptyState({
   title = "No items yet",
   body = "This section will update automatically once HR posts changes.",
@@ -302,9 +274,6 @@ export function uiSetLoading(el, loading = true, lines = 3) {
   el.innerHTML = loading ? uiSkeletonCard(lines) : "";
 }
 
-/* =========================
-   SMALL BUILDERS
-   ========================= */
 export function uiPill(text, tone = "default") {
   const tones = {
     default: "background:rgba(15,23,42,.06);border:1px solid rgba(229,234,242,.95);color:inherit;",
