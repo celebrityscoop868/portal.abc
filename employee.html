@@ -37,7 +37,7 @@
           <span class="nav-icon">💰</span>
           <span>Payroll</span>
         </a>
-        <a class="nav-item" href="#timeoff" data-route="timeoff">
+        <a class="nav-item" href="#benefits" data-route="benefits">
           <span class="nav-icon">🏖️</span>
           <span>Benefits</span>
         </a>
@@ -65,7 +65,7 @@
         <button class="btn icon" id="btnMenu" aria-label="Menu">☰</button>
         <div class="page-info">
           <div class="page-title" id="pageTitle">Home</div>
-          <div class="page-sub" id="pageSub">Welcome</div>
+          <div class="page-sub" id="pageSub">Welcome to your portal</div>
         </div>
         <div class="topbar-actions">
           <a href="#notifications" class="btn icon" aria-label="Notifications">🔔</a>
@@ -74,9 +74,38 @@
       </header>
 
       <div class="content" id="pageBody">
-        <!-- Content injected here -->
+        <div class="azCard" style="text-align:center;padding:40px;">
+          <div style="font-size:48px;margin-bottom:16px;">☀️</div>
+          <div style="font-weight:700;font-size:18px;">Loading...</div>
+        </div>
       </div>
     </main>
+  </div>
+
+  <!-- Mobile Bottom Tabs -->
+  <div id="azTabs">
+    <div class="az-wrap">
+      <a class="az-tab" href="#home" data-route="home">
+        <span class="az-ico">🏠</span>
+        <span>Home</span>
+      </a>
+      <a class="az-tab" href="#schedule" data-route="schedule">
+        <span class="az-ico">📅</span>
+        <span>Schedule</span>
+      </a>
+      <a class="az-tab" href="#payroll" data-route="payroll">
+        <span class="az-ico">💰</span>
+        <span>Pay</span>
+      </a>
+      <a class="az-tab" href="#benefits" data-route="benefits">
+        <span class="az-ico">🏖️</span>
+        <span>Benefits</span>
+      </a>
+      <a class="az-tab" href="#more" data-route="more">
+        <span class="az-ico">⋮</span>
+        <span>More</span>
+      </a>
+    </div>
   </div>
 
   <script type="module">
@@ -92,9 +121,9 @@
     });
 
     // Logout handler
-    document.getElementById('btnLogout')?.addEventListener('click', async () => {
+    document.getElementById('btnLogout').addEventListener('click', async () => {
       await signOutNow();
-      window.location.href = '/index.html';
+      window.location.href = './index.html';
     });
 
     // Initialize portal
