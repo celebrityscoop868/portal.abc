@@ -16,7 +16,6 @@ import {
   doc, getDoc, setDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-// For UI preview: if Firebase not configured, we still render screens
 export async function authReady() {
   return isFirebaseConfigured();
 }
@@ -30,39 +29,45 @@ export function onAuth(cb) {
   }
 }
 
-/**
- * ✅ FIX CRÍTICO:
- * Antes estabas haciendo setDoc(base, {merge:true}) con appointment/steps vacíos
- * y eso TE BORRABA la cita y el progreso cada vez que el usuario se loguea.
- *
- * Ahora:
- * - Si NO existe el doc: lo crea MINIMO (sin appointment/steps/notifications).
- * - Si existe: SOLO actualiza email/fullName + timestamps.
- * - NO pisa nada que admin haya guardado.
- */
 async function ensureUserDoc(user) {
   if (!user || !isFirebaseConfigured()) return;
 
   const ref = doc(db, "users", user.uid);
   const snap = await getDoc(ref);
 
-  const patch = {
+  const baseData = {
     email: user.email || "",
     fullName: user.displayName || "",
+    role: "employee",
+    status: "active",
+    stage: "shift_selection",
+    createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-    lastLoginAt: serverTimestamp()
+    lastLoginAt: serverTimestamp(),
+    steps: [
+      { id: "shift_selection", label: "Shift Selection", done: false },
+      { id: "footwear", label: "Safety Footwear", done: false },
+      { id: "i9", label: "I-9 Verification Ready", done: false },
+      { id: "photo_badge", label: "Photo Badge", done: false },
+      { id: "firstday", label: "First Day Preparation", done: false }
+    ],
+    appointment: {},
+    shift: {},
+    footwear: {},
+    i9: {},
+    notifications: []
   };
 
   if (!snap.exists()) {
-    await setDoc(ref, {
-      ...patch,
-      role: "employee",
-      status: "active",
-      createdAt: serverTimestamp()
-    }, { merge: true });
+    await setDoc(ref, baseData);
   } else {
-    // ✅ solo actualizar lo mínimo (NO tocar appointment/steps/notifications/contacts)
-    await setDoc(ref, patch, { merge: true });
+    const existing = snap.data();
+    await setDoc(ref, {
+      email: user.email || existing.email || "",
+      fullName: user.displayName || existing.fullName || "",
+      updatedAt: serverTimestamp(),
+      lastLoginAt: serverTimestamp()
+    }, { merge: true });
   }
 }
 
@@ -88,7 +93,6 @@ export async function signInGoogle() {
   if (!isFirebaseConfigured()) throw new Error("Firebase not configured yet.");
   await setPersistence(auth, browserLocalPersistence);
 
-  // Create provider inside the function (cleaner + avoids weird cached state)
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
 
@@ -98,16 +102,13 @@ export async function signInGoogle() {
     return cred.user;
   } catch (e) {
     const code = e?.code || "";
-    // Most common on iPhone if Safari blocks popups
     if (code === "auth/popup-blocked" || code === "auth/cancelled-popup-request") {
       throw new Error(
-        "Popup blocked. On iPhone: Settings > Safari > Block Pop-ups = OFF, then try again. " +
-        "Also make sure you tapped the button (not auto-redirect)."
+        "Popup blocked. On iPhone: Settings > Safari > Block Pop-ups = OFF, then try again."
       );
     }
-    // If they are in an in-app browser sometimes it breaks popup
     if (code === "auth/operation-not-supported-in-this-environment") {
-      throw new Error("Google sign-in not supported in this browser. Open in Safari/Chrome (not inside an app).");
+      throw new Error("Google sign-in not supported in this browser. Open in Safari/Chrome.");
     }
     throw e;
   }
