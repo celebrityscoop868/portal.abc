@@ -1,8 +1,3 @@
-// ===============================
-// SunPower Employee Portal - Complete Optimized Version
-// Professional HR Portal for Solar Manufacturing Workforce
-// ===============================
-
 import { uiSetText, uiToast, escapeHtml } from "./ui.js";
 import { db, isFirebaseConfigured } from "./firebase.js";
 import { onAuth } from "./auth.js";
@@ -12,17 +7,14 @@ import {
   serverTimestamp, collection, addDoc, query, where, orderBy, getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-// ---------- Firestore refs ----------
 const PUBLIC_DOC = () => doc(db, "portal", "public");
 const RECORD_DOC = (empId) => doc(db, "employeeRecords", empId);
 const TICKETS_COL = () => collection(db, "supportTickets");
 const CHAT_COL = (empId) => collection(db, "employeeRecords", empId, "chatMessages");
 
-// ---------- Config ----------
 const EMP_ID_RANGE = { min: 23, max: 200 };
 const AUTO_CREATE_ALLOWED_ID = true;
 
-// ---------- Route helpers ----------
 function routeName() {
   const h = (location.hash || "#home").replace("#", "").trim().toLowerCase();
   return h || "home";
@@ -101,7 +93,6 @@ function ymd(d) {
   }
 }
 
-// ---------- Confetti Effect ----------
 function triggerConfetti() {
   const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
   const container = document.createElement('div');
@@ -137,7 +128,6 @@ function triggerConfetti() {
   }, 2000);
 }
 
-// ---------- Default docs ----------
 function defaultPublicContent() {
   return {
     brand: {
@@ -269,45 +259,42 @@ async function ensureEmployeeId(user) {
   return empId;
 }
 
-// ===============================
-// A-to-Z CHROME (NO HAMBURGER, NO EMOJIS)
-// ===============================
 function isMobile() {
   return window.matchMedia("(max-width: 920px)").matches;
 }
 
 function azIcon(name) {
-  const common = `width="18" height="18" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`;
+  const common = `width="18" height="18" viewBox="0 0 24 24" fill="none" 
+     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`;
   const icons = {
-    home: `<svg ${common}><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/></svg>`,
-    schedule: `<svg ${common}><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M8 2v4M16 2v4"/><path d="M3 10h18"/></svg>`,
-    pay: `<svg ${common}><rect x="3" y="7" width="18" height="14" rx="3"/><path d="M3 11h18"/><path d="M7 15h4"/></svg>`,
-    benefits: `<svg ${common}><path d="M12 22s7-4 7-10V6l-7-3-7 3v6c0 6 7 10 7 10Z"/></svg>`,
-    more: `<svg ${common}><path d="M4 6h16M4 12h16M4 18h16"/></svg>`,
-    bell: `<svg ${common}><path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 7h18s-3 0-3-7"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>`,
-    chat: `<svg ${common}><path d="M21 15a4 4 0 01-4 4H8l-5 3V7a4 4 0 014-4h10a4 4 0 014 4z"/></svg>`,
-    chevR: `<svg ${common}><path d="M9 18l6-6-6-6"/></svg>`,
-    chevL: `<svg ${common}><path d="M15 18l-6-6 6-6"/></svg>`,
-    dots: `<svg ${common}><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg>`,
-    search: `<svg ${common}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`,
-    clock: `<svg ${common}><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>`,
-    check: `<svg ${common}><path d="M20 6L9 17l-5-5"/></svg>`,
-    info: `<svg ${common}><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>`,
-    alert: `<svg ${common}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`,
-    sun: `<svg ${common}><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`,
-    moon: `<svg ${common}><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>`,
-    star: `<svg ${common}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
-    briefcase: `<svg ${common}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>`,
-    user: `<svg ${common}><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
-    file: `<svg ${common}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>`,
-    edit: `<svg ${common}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
-    calendar: `<svg ${common}><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>`,
-    lock: `<svg ${common}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`,
-    unlock: `<svg ${common}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 019.9-1"/></svg>`,
-    checkCircle: `<svg ${common}><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
-    send: `<svg ${common}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,
-    message: `<svg ${common}><path d="M21 15a4 4 0 01-4 4H8l-5 3V7a4 4 0 014-4h10a4 4 0 014 4z"/></svg>`
+    home: `<svg  ${common}><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/></svg>`,
+    schedule: `<svg  ${common}><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M8 2v4M16 2v4"/><path d="M3 10h18"/></svg>`,
+    pay: `<svg  ${common}><rect x="3" y="7" width="18" height="14" rx="3"/><path d="M3 11h18"/><path d="M7 15h4"/></svg>`,
+    benefits: `<svg  ${common}><path d="M12 22s7-4 7-10V6l-7-3-7 3v6c0 6 7 10 7 10Z"/></svg>`,
+    more: `<svg  ${common}><path d="M4 6h16M4 12h16M4 18h16"/></svg>`,
+    bell: `<svg  ${common}><path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 7h18s-3 0-3-7"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>`,
+    chat: `<svg  ${common}><path d="M21 15a4 4 0 01-4 4H8l-5 3V7a4 4 0 014-4h10a4 4 0 014 4z"/></svg>`,
+    chevR: `<svg  ${common}><path d="M9 18l6-6-6-6"/></svg>`,
+    chevL: `<svg  ${common}><path d="M15 18l-6-6 6-6"/></svg>`,
+    dots: `<svg  ${common}><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg>`,
+    search: `<svg  ${common}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`,
+    clock: `<svg  ${common}><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>`,
+    check: `<svg  ${common}><path d="M20 6L9 17l-5-5"/></svg>`,
+    info: `<svg  ${common}><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>`,
+    alert: `<svg  ${common}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`,
+    sun: `<svg  ${common}><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`,
+    moon: `<svg  ${common}><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>`,
+    star: `<svg  ${common}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+    briefcase: `<svg  ${common}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>`,
+    user: `<svg  ${common}><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+    file: `<svg  ${common}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>`,
+    edit: `<svg  ${common}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+    calendar: `<svg  ${common}><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>`,
+    lock: `<svg  ${common}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`,
+    unlock: `<svg  ${common}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 019.9-1"/></svg>`,
+    checkCircle: `<svg  ${common}><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+    send: `<svg  ${common}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,
+    message: `<svg  ${common}><path d="M21 15a4 4 0 01-4 4H8l-5 3V7a4 4 0 014-4h10a4 4 0 014 4z"/></svg>`
   };
   return icons[name] || icons.dots;
 }
@@ -358,7 +345,9 @@ function ensureChromeOnce() {
       padding:8px 6px;
       border:1px solid transparent;
       user-select:none;
+
       -webkit-tap-highlight-color: transparent;
+
       touch-action: manipulation;
       color: rgba(11,18,32,.85);
       font-weight:900;
@@ -502,7 +491,9 @@ function ensureChromeOnce() {
       margin: 4px 0 12px;
       padding-bottom:8px;
       overflow:auto;
+
       -webkit-overflow-scrolling: touch;
+
     }
     .azTabsTop a{
       text-decoration:none;
@@ -624,7 +615,6 @@ function ensureChromeOnce() {
     .azPunchType{ font-size:12px; color: rgba(2,6,23,.65); }
     .azPunchTime{ font-size:14px; color: rgba(2,6,23,.85); }
 
-    /* Chat Styles */
     .chat-container{
       border-radius:16px;
       border:1px solid rgba(229,234,242,.95);
@@ -694,7 +684,6 @@ function ensureChromeOnce() {
       cursor:pointer;
     }
 
-    /* Benefits Grid */
     .benefits-grid{
       display:grid;
       grid-template-columns:1fr;
@@ -751,7 +740,6 @@ function ensureChromeOnce() {
       font-weight:1000;
     }
 
-    /* Profile Card */
     .profile-card{
       border-radius:20px;
       border:1px solid rgba(229,234,242,.95);
@@ -810,7 +798,6 @@ function ensureChromeOnce() {
       font-weight:1000;
     }
 
-    /* W-4 Section */
     .w4-info{
       background:linear-gradient(135deg, rgba(245,158,11,.08), rgba(245,158,11,.02));
       border:1px solid rgba(245,158,11,.20);
@@ -833,7 +820,6 @@ function ensureChromeOnce() {
       line-height:1.6;
     }
 
-    /* Progress Timeline */
     .progress-timeline{
       position:relative;
       padding-left:32px;
@@ -1186,9 +1172,6 @@ function setActiveTabsAndSidebar() {
   });
 }
 
-// ===============================
-// UI blocks
-// ===============================
 function sectionHeader(title, right = "") {
   return `
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
@@ -1214,23 +1197,14 @@ function azCard(title, sub, linkText, href) {
     </div>
   `;
 }
-
-// ===============================
-// HOME - Professional Welcome
-// ===============================
 function renderHome(publicData, recordData, userData) {
   const news = Array.isArray(publicData?.home?.news) ? publicData.home.news : defaultPublicContent().home.news;
-
   const punches = Array.isArray(recordData?.punchesToday) ? recordData.punchesToday : [];
   const punchesCount = punches.length;
-
   const maxHours = clamp(recordData?.maxHours?.max || 60, 1, 120);
   const scheduledMin = clamp(recordData?.maxHours?.scheduledMinutes || 0, 0, 100000);
   const remainingMin = Math.max(0, (maxHours * 60) - scheduledMin);
-
   const pct = clamp((scheduledMin / (maxHours * 60)) * 100, 0, 100);
-
-  // Get next pending step for home display
   const steps = userData?.steps || [];
   const nextStep = steps.find(s => !s.done);
   const completedCount = steps.filter(s => s.done).length;
@@ -1240,233 +1214,213 @@ function renderHome(publicData, recordData, userData) {
     "Home",
     "Welcome to your SunPower employee portal",
     `
-      <div class="azTopRow">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="font-weight:1000;color:rgba(2,6,23,.75);">SunPower</div>
-        </div>
-        <div class="azTopIcons">
-          <a class="azIconBtn" href="#help" aria-label="Help">${azIcon("info")}</a>
-          <a class="azIconBtn" href="#notifications" aria-label="Notifications">${azIcon("bell")}</a>
-        </div>
-      </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="font-weight:1000;color:rgba(2,6,23,.75);">SunPower</div>
+    </div>
+    <div class="azTopIcons">
+      <a class="azIconBtn" href="#help" aria-label="Help">${azIcon("info")}</a>
+      <a class="azIconBtn" href="#notifications" aria-label="Notifications">${azIcon("bell")}</a>
+    </div>
+  </div>
 
-      ${nextStep ? `
-        <div class="azCard" style="background:linear-gradient(135deg,rgba(29,78,216,.06),rgba(22,163,74,.06));border-color:rgba(29,78,216,.20);">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-            <div style="width:40px;height:40px;border-radius:999px;background:rgba(29,78,216,.10);display:flex;align-items:center;justify-content:center;color:rgba(29,78,216,1);">
-              ${azIcon("briefcase")}
-            </div>
-            <div>
-              <div class="azCardTitle">Complete Your Onboarding</div>
-              <div class="azCardSub">${completedCount} of ${totalCount} steps done</div>
-            </div>
-          </div>
-          <div style="height:8px;background:rgba(2,6,23,.08);border-radius:999px;overflow:hidden;margin-bottom:12px;">
-            <div style="height:100%;width:${(completedCount/totalCount)*100}%;background:linear-gradient(90deg,rgba(29,78,216,.6),rgba(22,163,74,.6));border-radius:999px;transition:width .3s ease;"></div>
-          </div>
-          <a class="azCardLink" href="#${nextStep.id === 'shift_selection' ? 'shift' : nextStep.id}">
-            <span>Continue: ${escapeHtml(nextStep.label)}</span>
-            ${azIcon("chevR")}
-          </a>
+  ${nextStep ? `
+    <div class="azCard" style="background:linear-gradient(135deg,rgba(29,78,216,.06),rgba(22,163,74,.06));border-color:rgba(29,78,216,.20);">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div style="width:40px;height:40px;border-radius:999px;background:rgba(29,78,216,.10);display:flex;align-items:center;justify-content:center;color:rgba(29,78,216,1);">
+          ${azIcon("briefcase")}
         </div>
-        <div style="height:10px"></div>
-      ` : `
-        <div class="azCard" style="background:linear-gradient(135deg,rgba(22,163,74,.08),rgba(22,163,74,.02));border-color:rgba(22,163,74,.25);">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:40px;height:40px;border-radius:999px;background:rgba(22,163,74,.10);display:flex;align-items:center;justify-content:center;color:rgba(22,163,74,1);">
-              ${azIcon("checkCircle")}
-            </div>
-            <div>
-              <div class="azCardTitle">Onboarding Complete</div>
-              <div class="azCardSub">You're all set for your first day!</div>
-            </div>
-          </div>
-        </div>
-        <div style="height:10px"></div>
-      `}
-
-      <div class="azHero">
-        <div class="azHeroInner">
-          <div class="azHeroTitle">${escapeHtml(news?.[0]?.title || "Welcome to SunPower")}</div>
-          <div class="azHeroSub">${escapeHtml(news?.[0]?.subtitle || "Your renewable energy career starts here")}</div>
-          <div class="azHeroPills">
-            <a class="azPill" href="#notifications">
-              <span>View updates</span>
-              ${azIcon("chevR")}
-            </a>
-            <span class="azPill">Safety First</span>
-            <span class="azPill">Green Energy</span>
-          </div>
+        <div>
+          <div class="azCardTitle">Complete Your Onboarding</div>
+          <div class="azCardSub">${completedCount} of ${totalCount} steps done</div>
         </div>
       </div>
-
-      <div style="height:10px"></div>
-
-      <div class="azRow2">
-        ${azCard(
-          "My Schedule",
-          "View your upcoming shifts and availability",
-          "View schedule",
-          "#schedule"
-        )}
-        ${azCard(
-          "Time Off",
-          "Request vacation and personal days",
-          "Request time off",
-          "#timeoff"
-        )}
+      <div style="height:8px;background:rgba(2,6,23,.08);border-radius:999px;overflow:hidden;margin-bottom:12px;">
+        <div style="height:100%;width:${(completedCount/totalCount)*100}%;background:linear-gradient(90deg,rgba(29,78,216,.6),rgba(22,163,74,.6));border-radius:999px;transition:width .3s ease;"></div>
       </div>
-
-      <div class="azWide">
-        <div class="azCard">
-          <div class="azCardTitle">Payroll & Compensation</div>
-          <div class="azCardSub">Access pay stubs, tax forms, and direct deposit information</div>
-          <a class="azCardLink" href="#payroll">
-            <span>View payroll</span>
-            ${azIcon("chevR")}
-          </a>
+      <a class="azCardLink" href="#${nextStep.id === 'shift_selection' ? 'shift' : nextStep.id}">
+        <span>Continue: ${escapeHtml(nextStep.label)}</span>
+        ${azIcon("chevR")}
+      </a>
+    </div>
+    <div style="height:10px"></div>
+  ` : `
+    <div class="azCard" style="background:linear-gradient(135deg,rgba(22,163,74,.08),rgba(22,163,74,.02));border-color:rgba(22,163,74,.25);">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;height:40px;border-radius:999px;background:rgba(22,163,74,.10);display:flex;align-items:center;justify-content:center;color:rgba(22,163,74,1);">
+          ${azIcon("checkCircle")}
+        </div>
+        <div>
+          <div class="azCardTitle">Onboarding Complete</div>
+          <div class="azCardSub">You're all set for your first day!</div>
         </div>
       </div>
+    </div>
+    <div style="height:10px"></div>
+  `}
 
-      <div class="azWide">
-        <div class="azCard">
-          <div class="azCardTitle">Benefits & Perks</div>
-          <div class="azCardSub">Health insurance, 401(k), and employee wellness programs</div>
-          <a class="azCardLink" href="#timeoff">
-            <span>Explore benefits</span>
-            ${azIcon("chevR")}
-          </a>
-        </div>
+  <div class="azHero">
+    <div class="azHeroInner">
+      <div class="azHeroTitle">${escapeHtml(news?.[0]?.title || "Welcome to SunPower")}</div>
+      <div class="azHeroSub">${escapeHtml(news?.[0]?.subtitle || "Your renewable energy career starts here")}</div>
+      <div class="azHeroPills">
+        <a class="azPill" href="#notifications">
+          <span>View updates</span>
+          ${azIcon("chevR")}
+        </a>
+        <span class="azPill">Safety First</span>
+        <span class="azPill">Green Energy</span>
       </div>
+    </div>
+  </div>
 
-      <div class="azWide">
-        <div class="azCard">
-          <div class="azCardTitle">Work Schedule Overview</div>
-          <div class="azCardSub">
-            ${escapeHtml(Math.floor(scheduledMin / 60))}h ${escapeHtml(String(scheduledMin % 60).padStart(2,"0"))}m scheduled this week
-          </div>
-          <div class="azBar"><div style="width:${pct.toFixed(0)}%"></div></div>
-        </div>
+  <div style="height:10px"></div>
+
+  <div class="azRow2">
+    ${azCard("My Schedule", "View your upcoming shifts and availability", "View schedule", "#schedule")}
+    ${azCard("Time Off", "Request vacation and personal days", "Request time off", "#timeoff")}
+  </div>
+
+  <div class="azWide">
+    <div class="azCard">
+      <div class="azCardTitle">Payroll & Compensation</div>
+      <div class="azCardSub">Access pay stubs, tax forms, and direct deposit information</div>
+      <a class="azCardLink" href="#payroll">
+        <span>View payroll</span>
+        ${azIcon("chevR")}
+      </a>
+    </div>
+  </div>
+
+  <div class="azWide">
+    <div class="azCard">
+      <div class="azCardTitle">Benefits & Perks</div>
+      <div class="azCardSub">Health insurance, 401(k), and employee wellness programs</div>
+      <a class="azCardLink" href="#timeoff">
+        <span>Explore benefits</span>
+        ${azIcon("chevR")}
+      </a>
+    </div>
+  </div>
+
+  <div class="azWide">
+    <div class="azCard">
+      <div class="azCardTitle">Work Schedule Overview</div>
+      <div class="azCardSub">
+        ${escapeHtml(Math.floor(scheduledMin / 60))}h ${escapeHtml(String(scheduledMin % 60).padStart(2,"0"))}m scheduled this week
       </div>
+      <div class="azBar"><div style="width:${pct.toFixed(0)}%"></div></div>
+    </div>
+  </div>
 
-      <div style="height:8px"></div>
-    `
+  <div style="height:8px"></div>
+`
   );
 }
 
-// ===============================
-// PROFILE - Personal Information
-// ===============================
 function renderProfile(userData, recordData) {
   const profile = recordData?.profile || {};
   const fullName = userData?.fullName || profile?.fullName || "Employee";
-  const empId = userData?.employeeId || "—";
-  
+  const empId = userData?.employeeId || "---";
+
   setPage(
     "My Profile",
     "Personal information and contact details",
     `
-      <div class="profile-card">
-        <div class="profile-avatar">${azIcon("user")}</div>
-        <div class="profile-name">${escapeHtml(fullName)}</div>
-        <div class="profile-id">Employee ID: ${escapeHtml(empId)}</div>
-        
-        <div class="profile-info">
-          <div class="profile-row">
-            <span class="profile-label">Full Name</span>
-            <span class="profile-value">${escapeHtml(profile?.fullName || fullName)}</span>
-          </div>
-          <div class="profile-row">
-            <span class="profile-label">Email</span>
-            <span class="profile-value">${escapeHtml(userData?.email || "—")}</span>
-          </div>
-          <div class="profile-row">
-            <span class="profile-label">Phone</span>
-            <span class="profile-value">${escapeHtml(profile?.phone || "Not provided")}</span>
-          </div>
-          <div class="profile-row">
-            <span class="profile-label">Address</span>
-            <span class="profile-value">${escapeHtml(profile?.address || "Not provided")}</span>
-          </div>
-          <div class="profile-row">
-            <span class="profile-label">Date of Birth</span>
-            <span class="profile-value">${escapeHtml(profile?.dateOfBirth || "Not provided")}</span>
-          </div>
-          <div class="profile-row">
-            <span class="profile-label">Emergency Contact</span>
-            <span class="profile-value">${escapeHtml(profile?.emergencyContact || "Not provided")}</span>
-          </div>
-          <div class="profile-row">
-            <span class="profile-label">Position</span>
-            <span class="profile-value">${escapeHtml(userData?.shift?.position || "Pending assignment")}</span>
-          </div>
-          <div class="profile-row">
-            <span class="profile-label">Shift</span>
-            <span class="profile-value">${escapeHtml(userData?.shift?.shift || "Pending selection")}</span>
-          </div>
-        </div>
+  <div class="profile-card">
+    <div class="profile-avatar">${azIcon("user")}</div>
+    <div class="profile-name">${escapeHtml(fullName)}</div>
+    <div class="profile-id">Employee ID: ${escapeHtml(empId)}</div>
+    
+    <div class="profile-info">
+      <div class="profile-row">
+        <span class="profile-label">Full Name</span>
+        <span class="profile-value">${escapeHtml(profile?.fullName || fullName)}</span>
       </div>
+      <div class="profile-row">
+        <span class="profile-label">Email</span>
+        <span class="profile-value">${escapeHtml(userData?.email || "—")}</span>
+      </div>
+      <div class="profile-row">
+        <span class="profile-label">Phone</span>
+        <span class="profile-value">${escapeHtml(profile?.phone || "Not provided")}</span>
+      </div>
+      <div class="profile-row">
+        <span class="profile-label">Address</span>
+        <span class="profile-value">${escapeHtml(profile?.address || "Not provided")}</span>
+      </div>
+      <div class="profile-row">
+        <span class="profile-label">Date of Birth</span>
+        <span class="profile-value">${escapeHtml(profile?.dateOfBirth || "Not provided")}</span>
+      </div>
+      <div class="profile-row">
+        <span class="profile-label">Emergency Contact</span>
+        <span class="profile-value">${escapeHtml(profile?.emergencyContact || "Not provided")}</span>
+      </div>
+      <div class="profile-row">
+        <span class="profile-label">Position</span>
+        <span class="profile-value">${escapeHtml(userData?.shift?.position || "Pending assignment")}</span>
+      </div>
+      <div class="profile-row">
+        <span class="profile-label">Shift</span>
+        <span class="profile-value">${escapeHtml(userData?.shift?.shift || "Pending selection")}</span>
+      </div>
+    </div>
+  </div>
 
-      <div class="azCard" style="margin-top:16px;">
-        ${sectionHeader("Important Notice")}
-        <div class="muted" style="line-height:1.6;">
-          To update your personal information, please contact HR directly. 
-          For security reasons, profile changes must be verified before updating in our system.
-        </div>
-        <a class="btn ghost" href="#help" style="display:block;width:100%;text-align:center;margin-top:12px;border-radius:16px;">
-          Contact HR to Update Information
-        </a>
-      </div>
-    `
+  <div class="azCard" style="margin-top:16px;">
+    ${sectionHeader("Important Notice")}
+    <div class="muted" style="line-height:1.6;">
+      To update your personal information, please contact HR directly. 
+      For security reasons, profile changes must be verified before updating in our system.
+    </div>
+    <a class="btn ghost" href="#help" style="display:block;width:100%;text-align:center;margin-top:12px;border-radius:16px;">
+      Contact HR to Update Information
+    </a>
+  </div>
+`
   );
 }
 
-// ===============================
-// CHAT - HR Communication
-// ===============================
 function renderChat(userData, empId) {
   setPage(
     "HR Chat",
     "Direct messaging with Human Resources",
     `
-      <div class="chat-container">
-        <div class="chat-messages" id="chatMessages">
-          <div class="chat-message admin">
-            <div>Welcome to SunPower HR Chat. How can we help you today?</div>
-            <div class="chat-time">HR Team</div>
-          </div>
-        </div>
-        <div class="chat-input-area">
-          <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." maxlength="500">
-          <button class="chat-send" id="chatSendBtn">${azIcon("send")}</button>
-        </div>
+  <div class="chat-container">
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-message admin">
+        <div>Welcome to SunPower HR Chat. How can we help you today?</div>
+        <div class="chat-time">HR Team</div>
       </div>
-      
-      <div class="azCard" style="margin-top:16px;">
-        ${sectionHeader("Chat Hours")}
-        <div class="muted" style="line-height:1.6;">
-          <strong>Monday - Friday:</strong> 8:00 AM - 6:00 PM EST<br>
-          <strong>Saturday:</strong> 9:00 AM - 2:00 PM EST<br>
-          <strong>Sunday:</strong> Closed<br><br>
-          For urgent matters outside these hours, please call HR Emergency Line: (800) 876-4321
-        </div>
-      </div>
-    `
+    </div>
+    <div class="chat-input-area">
+      <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." maxlength="500">
+      <button class="chat-send" id="chatSendBtn">${azIcon("send")}</button>
+    </div>
+  </div>
+  
+  <div class="azCard" style="margin-top:16px;">
+    ${sectionHeader("Chat Hours")}
+    <div class="muted" style="line-height:1.6;">
+      <strong>Monday - Friday:</strong> 8:00 AM - 6:00 PM EST<br>
+      <strong>Saturday:</strong> 9:00 AM - 2:00 PM EST<br>
+      <strong>Sunday:</strong> Closed<br><br>
+      For urgent matters outside these hours, please call HR Emergency Line: (800) 876-4321
+    </div>
+  </div>
+`
   );
 
-  // Load existing messages
   loadChatMessages(empId);
 
-  // Setup send functionality
   const sendBtn = document.getElementById("chatSendBtn");
   const input = document.getElementById("chatInput");
-  
+
   const sendMessage = async () => {
     const text = input.value.trim();
     if (!text) return;
-    
+
     if (!isFirebaseConfigured()) {
-      // Preview mode - just show locally
       addMessageToUI(text, "employee", new Date().toLocaleTimeString());
       input.value = "";
       return;
@@ -1495,32 +1449,25 @@ function renderChat(userData, empId) {
 function addMessageToUI(text, sender, time) {
   const container = document.getElementById("chatMessages");
   if (!container) return;
-  
+
   const msgDiv = document.createElement("div");
   msgDiv.className = `chat-message ${sender}`;
-  msgDiv.innerHTML = `
-    <div>${escapeHtml(text)}</div>
-    <div class="chat-time">${escapeHtml(time)}</div>
-  `;
+  msgDiv.innerHTML = `<div>${escapeHtml(text)}</div>
+    <div class="chat-time">${escapeHtml(time)}</div>`;
   container.appendChild(msgDiv);
   container.scrollTop = container.scrollHeight;
 }
 
 async function loadChatMessages(empId) {
   if (!isFirebaseConfigured()) return;
-  
+
   try {
     const q = query(CHAT_COL(empId), orderBy("timestamp", "asc"));
-    // In a real implementation, you'd use onSnapshot for real-time updates
-    // For now, we'll just show the welcome message
   } catch (e) {
     console.error("Error loading chat:", e);
   }
 }
 
-// ===============================
-// SCHEDULE: Tabs + Calendar
-// ===============================
 function scheduleSubtabFromRoute(r) {
   if (r === "schedule-timecard") return "timecard";
   if (r === "schedule-findshifts") return "findshifts";
@@ -1528,18 +1475,15 @@ function scheduleSubtabFromRoute(r) {
 }
 
 function scheduleTopTabsHtml(active) {
-  const tab = (key, label, href) => `
-    <a href="${href}" class="${active === key ? "active" : ""}">
+  const tab = (key, label, href) =>
+    `<a href="${href}" class="${active === key ? "active" : ""}">
       ${escapeHtml(label)}
-    </a>
-  `;
-  return `
-    <div class="azTabsTop">
+    </a>`;
+  return `<div class="azTabsTop">
       ${tab("myschedule","My Schedule","#schedule")}
       ${tab("timecard","Timecard","#schedule-timecard")}
       ${tab("findshifts","Find Shifts","#schedule-findshifts")}
-    </div>
-  `;
+    </div>`;
 }
 
 function buildEventsIndex(recordData) {
@@ -1600,79 +1544,75 @@ function renderCalendarMonth(recordData, state) {
     const isToday = (key && key === today);
 
     cells.push(`
-      <div class="azDay ${muted ? "muted" : ""} ${isSel ? "sel" : ""} ${isToday ? "today" : ""}"
-           data-ymd="${escapeHtml(key)}">
-        ${escapeHtml(String(label))}
-        ${hasEvent ? `<span class="dot"></span>` : ``}
-      </div>
-    `);
+  <div class="azDay ${muted ? "muted" : ""} ${isSel ? "sel" : ""} ${isToday ? "today" : ""}"
+       data-ymd="${escapeHtml(key)}">
+    ${escapeHtml(String(label))}
+    ${hasEvent ? `<span class="dot"></span>` : ``}
+  </div>
+`);
   }
 
   const dow = ["SUN","MON","TUE","WED","THU","FRI","SAT"].map(x => `<div class="azCalDow">${x}</div>`).join("");
 
   return `
-    <div class="azCalWrap">
-      <div class="azCalHead">
-        <div class="azCalMonth">${escapeHtml(fmtMonthTitle(y,m))}</div>
-        <div class="azCalNav">
-          <button class="azCalBtn" id="calPrev" type="button" aria-label="Previous month">${azIcon("chevL")}</button>
-          <button class="azCalBtn" id="calNext" type="button" aria-label="Next month">${azIcon("chevR")}</button>
-        </div>
-      </div>
-
-      <div class="azCalGrid">
-        ${dow}
-        ${cells.join("")}
-      </div>
-
-      <div class="azLegend">
-        <div style="display:flex;align-items:center;gap:6px;">
-          <span style="width:8px;height:8px;border-radius:999px;background:rgba(29,78,216,.60);"></span>
-          <span>Scheduled</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <span style="width:8px;height:8px;border-radius:999px;background:rgba(2,6,23,.25);"></span>
-          <span>Has activity</span>
-        </div>
-      </div>
+<div class="azCalWrap">
+  <div class="azCalHead">
+    <div class="azCalMonth">${escapeHtml(fmtMonthTitle(y,m))}</div>
+    <div class="azCalNav">
+      <button class="azCalBtn" id="calPrev" type="button" aria-label="Previous month">${azIcon("chevL")}</button>
+      <button class="azCalBtn" id="calNext" type="button" aria-label="Next month">${azIcon("chevR")}</button>
     </div>
-  `;
+  </div>
+
+  <div class="azCalGrid">
+    ${dow}
+    ${cells.join("")}
+  </div>
+
+  <div class="azLegend">
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span style="width:8px;height:8px;border-radius:999px;background:rgba(29,78,216,.60);"></span>
+      <span>Scheduled</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span style="width:8px;height:8px;border-radius:999px;background:rgba(2,6,23,.25);"></span>
+      <span>Has activity</span>
+    </div>
+  </div>
+</div>
+`;
 }
 
 function renderMySchedule(recordData) {
   const today = new Date();
-  const state = {
-    y: today.getFullYear(),
-    m: today.getMonth(),
-    selectedYmd: ymd(today)
-  };
+  const state = { y: today.getFullYear(), m: today.getMonth(), selectedYmd: ymd(today) };
 
   setPage(
     "Schedule",
     "View your work schedule and upcoming shifts",
     `
-      ${scheduleTopTabsHtml("myschedule")}
+  ${scheduleTopTabsHtml("myschedule")}
 
-      ${renderCalendarMonth(recordData, state)}
+  ${renderCalendarMonth(recordData, state)}
 
-      <div style="height:12px"></div>
+  <div style="height:12px"></div>
 
-      <div class="azCard" id="dayDetailsCard">
-        <div class="azCardTitle">Day Details</div>
-        <div class="azCardSub" id="dayDetailsSub">Select a day to view your schedule.</div>
-        <div id="dayDetailsBody" style="margin-top:10px;"></div>
-      </div>
+  <div class="azCard" id="dayDetailsCard">
+    <div class="azCardTitle">Day Details</div>
+    <div class="azCardSub" id="dayDetailsSub">Select a day to view your schedule.</div>
+    <div id="dayDetailsBody" style="margin-top:10px;"></div>
+  </div>
 
-      <div class="azCard" style="margin-top:12px;">
-        <div class="azCardTitle">Schedule Information</div>
-        <div class="azCardSub" style="line-height:1.6;">
-          Your official schedule will be available after your first day. 
-          During onboarding, your shift preference has been recorded and will be 
-          confirmed by your supervisor. Check back after completing your first week 
-          to see your regular schedule.
-        </div>
-      </div>
-    `
+  <div class="azCard" style="margin-top:12px;">
+    <div class="azCardTitle">Schedule Information</div>
+    <div class="azCardSub" style="line-height:1.6;">
+      Your official schedule will be available after your first day. 
+      During onboarding, your shift preference has been recorded and will be 
+      confirmed by your supervisor. Check back after completing your first week 
+      to see your regular schedule.
+    </div>
+  </div>
+`
   );
 
   const eventsIdx = buildEventsIndex(recordData);
@@ -1692,11 +1632,11 @@ function renderMySchedule(recordData) {
 
     if (!list.length) {
       body.innerHTML = `
-        <div class="muted" style="line-height:1.45;">
-          No scheduled shifts for this date. Your schedule will be available 
-          after your first day of employment.
-        </div>
-      `;
+    <div class="muted" style="line-height:1.45;">
+      No scheduled shifts for this date. Your schedule will be available 
+      after your first day of employment.
+    </div>
+  `;
       return;
     }
 
@@ -1708,17 +1648,17 @@ function renderMySchedule(recordData) {
       const role = safe(ev.role, "");
       const status = safe(ev.status, "Scheduled");
       return `
-        <div class="azCard" style="box-shadow:none;border-radius:14px;margin-top:10px;">
-          <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-            <div>
-              <div class="azCardTitle">${escapeHtml(`${start} - ${end}`)}</div>
-              <div class="azCardSub">${escapeHtml([role, site].filter(Boolean).join(" • ") || "Scheduled shift")}</div>
-              ${loc ? `<div class="azCardSub" style="margin-top:8px;">${escapeHtml(loc)}</div>` : ""}
-            </div>
-            <div class="azCardSub" style="font-weight:1000;color:rgba(2,6,23,.60);">${escapeHtml(status)}</div>
-          </div>
+    <div class="azCard" style="box-shadow:none;border-radius:14px;margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <div>
+          <div class="azCardTitle">${escapeHtml(`${start} - ${end}`)}</div>
+          <div class="azCardSub">${escapeHtml([role, site].filter(Boolean).join(" • ") || "Scheduled shift")}</div>
+          ${loc ? `<div class="azCardSub" style="margin-top:8px;">${escapeHtml(loc)}</div>` : ""}
         </div>
-      `;
+        <div class="azCardSub" style="font-weight:1000;color:rgba(2,6,23,.60);">${escapeHtml(status)}</div>
+      </div>
+    </div>
+  `;
     }).join("");
   }
 
@@ -1766,64 +1706,64 @@ function renderTimecard(recordData) {
     "Schedule",
     "Time tracking and attendance",
     `
-      ${scheduleTopTabsHtml("timecard")}
+  ${scheduleTopTabsHtml("timecard")}
 
-      <div class="azCard">
-        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
-          <div>
-            <div class="azCardTitle">Timecard</div>
-            <div class="azCardSub">${escapeHtml(fmtDate(nowISODate()))}</div>
+  <div class="azCard">
+    <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+      <div>
+        <div class="azCardTitle">Timecard</div>
+        <div class="azCardSub">${escapeHtml(fmtDate(nowISODate()))}</div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;padding:20px;background:rgba(229,234,242,.40);border-radius:12px;text-align:center;">
+      <div style="font-size:48px;margin-bottom:8px;">⏱️</div>
+      <div style="font-weight:1000;font-size:16px;color:rgba(2,6,23,.85);margin-bottom:8px;">Time Tracking Coming Soon</div>
+      <div style="font-size:13px;color:rgba(2,6,23,.60);line-height:1.5;">
+        Your timecard will be activated after your first day of work.<br>
+        Clock in/out functionality will be available through this portal 
+        and the SunPower mobile app.
+      </div>
+    </div>
+
+    <div style="margin-top:16px;">
+      <div class="azCardTitle" style="margin-bottom:12px;">Quick Actions</div>
+      <div class="azQuickGrid">
+        <div class="azQuick" style="cursor:default;opacity:.7;">
+          <div class="azQuickTop">
+            <div class="azQuickIcon">${azIcon("clock")}</div>
           </div>
+          <div>Clock In</div>
+          <div class="azQuickSub">Available after first day</div>
         </div>
-
-        <div style="margin-top:16px;padding:20px;background:rgba(229,234,242,.40);border-radius:12px;text-align:center;">
-          <div style="font-size:48px;margin-bottom:8px;">⏱️</div>
-          <div style="font-weight:1000;font-size:16px;color:rgba(2,6,23,.85);margin-bottom:8px;">Time Tracking Coming Soon</div>
-          <div style="font-size:13px;color:rgba(2,6,23,.60);line-height:1.5;">
-            Your timecard will be activated after your first day of work.<br>
-            Clock in/out functionality will be available through this portal 
-            and the SunPower mobile app.
+        <div class="azQuick" style="cursor:default;opacity:.7;">
+          <div class="azQuickTop">
+            <div class="azQuickIcon">${azIcon("calendar")}</div>
           </div>
+          <div>View History</div>
+          <div class="azQuickSub">No records yet</div>
         </div>
-
-        <div style="margin-top:16px;">
-          <div class="azCardTitle" style="margin-bottom:12px;">Quick Actions</div>
-          <div class="azQuickGrid">
-            <div class="azQuick" style="cursor:default;opacity:.7;">
-              <div class="azQuickTop">
-                <div class="azQuickIcon">${azIcon("clock")}</div>
-              </div>
-              <div>Clock In</div>
-              <div class="azQuickSub">Available after first day</div>
-            </div>
-            <div class="azQuick" style="cursor:default;opacity:.7;">
-              <div class="azQuickTop">
-                <div class="azQuickIcon">${azIcon("calendar")}</div>
-              </div>
-              <div>View History</div>
-              <div class="azQuickSub">No records yet</div>
-            </div>
-            <div class="azQuick" href="#help">
-              <div class="azQuickTop">
-                <div class="azQuickIcon">${azIcon("alert")}</div>
-              </div>
-              <div>Report Issue</div>
-              <div class="azQuickSub">Contact HR</div>
-            </div>
+        <div class="azQuick" href="#help">
+          <div class="azQuickTop">
+            <div class="azQuickIcon">${azIcon("alert")}</div>
           </div>
+          <div>Report Issue</div>
+          <div class="azQuickSub">Contact HR</div>
         </div>
       </div>
+    </div>
+  </div>
 
-      <div class="azCard" style="margin-top:12px;">
-        <div class="azCardTitle">Attendance Policies</div>
-        <div class="azCardSub" style="line-height:1.6;">
-          <strong>Punctuality is essential.</strong> Please arrive 10 minutes before 
-          your scheduled shift. Your supervisor will explain the clock-in process 
-          during your first day orientation. For questions about attendance, 
-          contact HR at (800) 876-4321.
-        </div>
-      </div>
-    `
+  <div class="azCard" style="margin-top:12px;">
+    <div class="azCardTitle">Attendance Policies</div>
+    <div class="azCardSub" style="line-height:1.6;">
+      <strong>Punctuality is essential.</strong> Please arrive 10 minutes before 
+      your scheduled shift. Your supervisor will explain the clock-in process 
+      during your first day orientation. For questions about attendance, 
+      contact HR at (800) 876-4321.
+    </div>
+  </div>
+`
   );
 }
 
@@ -1834,60 +1774,57 @@ function renderFindShifts(recordData) {
     "Schedule",
     "Find available shifts and overtime opportunities",
     `
-      ${scheduleTopTabsHtml("findshifts")}
+  ${scheduleTopTabsHtml("findshifts")}
 
-      <div class="azCard">
-        <div class="azCardTitle">Available Shifts</div>
-        <div class="azCardSub">Browse and request additional shifts</div>
+  <div class="azCard">
+    <div class="azCardTitle">Available Shifts</div>
+    <div class="azCardSub">Browse and request additional shifts</div>
 
-        <div style="margin-top:16px;padding:20px;background:rgba(229,234,242,.40);border-radius:12px;text-align:center;">
-          <div style="font-size:48px;margin-bottom:8px;">📋</div>
-          <div style="font-weight:1000;font-size:16px;color:rgba(2,6,23,.85);margin-bottom:8px;">Shift Bidding Opens After First Week</div>
-          <div style="font-size:13px;color:rgba(2,6,23,.60);line-height:1.5;">
-            You'll be able to view and request additional shifts after completing 
-            your first week. This feature allows you to pick up overtime or swap 
-            shifts with approval from your supervisor.
-          </div>
-        </div>
+    <div style="margin-top:16px;padding:20px;background:rgba(229,234,242,.40);border-radius:12px;text-align:center;">
+      <div style="font-size:48px;margin-bottom:8px;">📋</div>
+      <div style="font-weight:1000;font-size:16px;color:rgba(2,6,23,.85);margin-bottom:8px;">Shift Bidding Opens After First Week</div>
+      <div style="font-size:13px;color:rgba(2,6,23,.60);line-height:1.5;">
+        You'll be able to view and request additional shifts after completing 
+        your first week. This feature allows you to pick up overtime or swap 
+        shifts with approval from your supervisor.
+      </div>
+    </div>
 
-        <div style="margin-top:16px;">
-          <div class="azCardTitle" style="margin-bottom:12px;">Your Current Assignment</div>
-          <div class="azCard" style="background:rgba(29,78,216,.04);border-color:rgba(29,78,216,.20);">
-            <div class="azCardTitle">Pending Confirmation</div>
-            <div class="azCardSub" style="margin-top:8px;">
-              Your shift preference has been recorded and is pending supervisor approval. 
-              You will receive a notification once your regular schedule is confirmed.
-            </div>
-          </div>
+    <div style="margin-top:16px;">
+      <div class="azCardTitle" style="margin-bottom:12px;">Your Current Assignment</div>
+      <div class="azCard" style="background:rgba(29,78,216,.04);border-color:rgba(29,78,216,.20);">
+        <div class="azCardTitle">Pending Confirmation</div>
+        <div class="azCardSub" style="margin-top:8px;">
+          Your shift preference has been recorded and is pending supervisor approval. 
+          You will receive a notification once your regular schedule is confirmed.
         </div>
       </div>
-    `
+    </div>
+  </div>
+`
   );
 }
 
-// ===============================
-// PROGRESS - Onboarding Steps
-// ===============================
 function renderProgress(userData, recordData) {
   const steps = Array.isArray(userData?.steps) ? userData.steps : [];
   const appt = recordData?.appointment || userData?.appointment || {};
-  
+
   const displaySteps = steps;
   const completedSteps = displaySteps.filter(s => s.done);
   const pendingSteps = displaySteps.filter(s => !s.done);
   const nextStep = pendingSteps[0];
   const progressPercent = Math.round((completedSteps.length / displaySteps.length) * 100);
-  
+
   const currentStepIndex = displaySteps.findIndex(s => !s.done);
 
   const stepsTimeline = displaySteps.map((s, index) => {
     const isCompleted = s.done;
     const isCurrent = index === currentStepIndex;
     const isLocked = index > currentStepIndex;
-    
+
     const statusText = isCompleted ? "Completed" : isCurrent ? "In Progress" : "Locked";
     const iconSvg = isCompleted ? azIcon("check") : isCurrent ? azIcon("unlock") : azIcon("lock");
-    
+
     const descriptions = {
       shift_selection: "Select your preferred shift and position for warehouse operations",
       footwear: "Purchase required safety footwear before your first day",
@@ -1895,31 +1832,30 @@ function renderProgress(userData, recordData) {
       photo_badge: "Complete photo ID badge at facility (in-person)",
       firstday: "Final preparation for your first day at the facility"
     };
-    
+
     const metaInfo = isCompleted ? "Done" : isCurrent ? "Action required" : `Complete ${displaySteps[index-1]?.label || 'previous step'} first`;
 
     return `
-      <div class="progress-item ${isCompleted ? 'completed' : isCurrent ? 'current' : 'locked'}">
-        <div class="progress-item-icon">${iconSvg}</div>
-        <div class="progress-item-card">
-          <div class="progress-item-header">
-            <div class="progress-item-title">${escapeHtml(s.label)}</div>
-            <div class="progress-item-status">${statusText}</div>
-          </div>
-          <div class="azCardSub" style="margin-top:6px;">${descriptions[s.id] || ''}</div>
-          <div class="azCardSub" style="margin-top:8px;font-size:11px;">
-            ${azIcon(isCompleted ? "checkCircle" : isCurrent ? "info" : "lock")} ${metaInfo}
-          </div>
-        </div>
+  <div class="progress-item ${isCompleted ? 'completed' : isCurrent ? 'current' : 'locked'}">
+    <div class="progress-item-icon">${iconSvg}</div>
+    <div class="progress-item-card">
+      <div class="progress-item-header">
+        <div class="progress-item-title">${escapeHtml(s.label)}</div>
+        <div class="progress-item-status">${statusText}</div>
       </div>
-    `;
+      <div class="azCardSub" style="margin-top:6px;">${descriptions[s.id] || ''}</div>
+      <div class="azCardSub" style="margin-top:8px;font-size:11px;">
+        ${azIcon(isCompleted ? "checkCircle" : isCurrent ? "info" : "lock")} ${metaInfo}
+      </div>
+    </div>
+  </div>
+`;
   }).join("");
 
   setPage(
     "Progress",
     "Your onboarding journey",
-    `
-      <div class="azCard" style="background:linear-gradient(135deg,rgba(29,78,216,.08),rgba(22,163,74,.04));border-color:rgba(29,78,216,.20);padding:24px;">
+    `<div class="azCard" style="background:linear-gradient(135deg,rgba(29,78,216,.08),rgba(22,163,74,.04));border-color:rgba(29,78,216,.20);padding:24px;">
         <div style="text-align:center;margin-bottom:20px;">
           <div style="font-size:48px;margin-bottom:12px;">🎯</div>
           <div style="font-weight:1000;font-size:24px;color:rgba(2,6,23,.85);margin-bottom:8px;">${progressPercent}% Complete</div>
@@ -1982,38 +1918,28 @@ function renderProgress(userData, recordData) {
           </div>
         </div>
       </div>
-    `
+`
   );
 }
-
-// ===============================
-// SEQUENTIAL ONBOARDING
-// ===============================
 
 function getStepStatus(stepId, userData) {
   const steps = userData?.steps || [];
   const stepIndex = steps.findIndex(s => s.id === stepId);
   const prevStep = steps[stepIndex - 1];
-  
+
   const isPrevDone = !prevStep || prevStep.done;
   const isCurrentDone = steps.find(s => s.id === stepId)?.done;
-  
-  return {
-    isDone: isCurrentDone,
-    isAvailable: isPrevDone,
-    isLocked: !isPrevDone
-  };
-}
 
+  return { isDone: isCurrentDone, isAvailable: isPrevDone, isLocked: !isPrevDone };
+}
 function renderShiftSelection(userData, saveUserPatch) {
   const status = getStepStatus("shift_selection", userData);
-  
+
   if (status.isDone) {
     setPage(
       "Shift Selection",
       "Completed",
-      `
-        <div class="azCard" style="text-align:center;padding:40px 24px;background:linear-gradient(135deg,rgba(22,163,74,.08),rgba(22,163,74,.02));border-color:rgba(22,163,74,.25);">
+      `<div class="azCard" style="text-align:center;padding:40px 24px;background:linear-gradient(135deg,rgba(22,163,74,.08),rgba(22,163,74,.02));border-color:rgba(22,163,74,.25);">
           <div style="width:80px;height:80px;border-radius:999px;background:rgba(22,163,74,.10);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:rgba(22,163,74,1);">
             ${azIcon("checkCircle")}
           </div>
@@ -2038,8 +1964,7 @@ function renderShiftSelection(userData, saveUserPatch) {
           <a class="btn primary" href="#footwear" style="display:block;width:100%;border-radius:16px;padding:16px;">
             Continue to Safety Footwear
           </a>
-        </div>
-      `
+        </div>`
     );
     return;
   }
@@ -2052,40 +1977,39 @@ function renderShiftSelection(userData, saveUserPatch) {
     "Shift Selection",
     "Choose your work preferences (HR will confirm)",
     `
-      <div class="azCard">
-        ${sectionHeader("Select Your Position")}
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          ${posCard("assembler","Solar Panel Assembler","Assemble and test solar panels in production line","$18–$23/hr",pos)}
-          ${posCard("material","Material Handler","Receive, store, and distribute materials throughout facility","$18–$22/hr",pos)}
-          ${posCard("qc","Quality Control Inspector","Inspect panels for defects and ensure quality standards","$19–$24/hr",pos)}
-          ${posCard("shipping","Shipping & Receiving","Prepare finished products for shipment and receive inventory","$18–$22/hr",pos)}
-        </div>
-      </div>
+  <div class="azCard">
+    ${sectionHeader("Select Your Position")}
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      ${posCard("assembler","Solar Panel Assembler","Assemble and test solar panels in production line","$18–$23/hr",pos)}
+      ${posCard("material","Material Handler","Receive, store, and distribute materials throughout facility","$18–$22/hr",pos)}
+      ${posCard("qc","Quality Control Inspector","Inspect panels for defects and ensure quality standards","$19–$24/hr",pos)}
+      ${posCard("shipping","Shipping & Receiving","Prepare finished products for shipment and receive inventory","$18–$22/hr",pos)}
+    </div>
+  </div>
 
-      <div class="azCard" style="margin-top:16px;">
-        ${sectionHeader("Select Your Shift")}
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          ${shiftCard("early","Early Shift","6:00 AM – 2:30 PM","Morning schedule, great for early risers",sh)}
-          ${shiftCard("mid","Mid Shift","2:00 PM – 10:30 PM","Afternoon to evening, balanced schedule",sh)}
-          ${shiftCard("late","Late Shift","10:00 PM – 6:30 AM","Overnight differential pay +$1.50/hr",sh)}
-          ${shiftCard("weekend","Weekend Shift","Fri-Sun 12hr shifts","Work 36hrs, get paid for 40hrs",sh)}
-        </div>
-      </div>
+  <div class="azCard" style="margin-top:16px;">
+    ${sectionHeader("Select Your Shift")}
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      ${shiftCard("early","Early Shift","6:00 AM – 2:30 PM","Morning schedule, great for early risers",sh)}
+      ${shiftCard("mid","Mid Shift","2:00 PM – 10:30 PM","Afternoon to evening, balanced schedule",sh)}
+      ${shiftCard("late","Late Shift","10:00 PM – 6:30 AM","Overnight differential pay +$1.50/hr",sh)}
+      ${shiftCard("weekend","Weekend Shift","Fri-Sun 12hr shifts","Work 36hrs, get paid for 40hrs",sh)}
+    </div>
+  </div>
 
-      <button class="btn primary" id="btnShiftSave" type="button" style="margin-top:20px;width:100%;border-radius:16px;padding:16px;">
-        Save Preferences
-      </button>
+  <button class="btn primary" id="btnShiftSave" type="button" style="margin-top:20px;width:100%;border-radius:16px;padding:16px;">
+    Save Preferences
+  </button>
 
-      <div class="small muted" style="margin-top:12px;line-height:1.4;text-align:center;">
-        Preferences are not final assignments. HR will confirm based on availability and business needs.
-      </div>
-    `
+  <div class="small muted" style="margin-top:12px;line-height:1.4;text-align:center;">
+    Preferences are not final assignments. HR will confirm based on availability and business needs.
+  </div>
+`
   );
 
   function posCard(key, title, desc, pay, selectedKey) {
     const selected = selectedKey === key;
-    return `
-      <label class="azCard shift-card ${selected ? 'selected' : ''}" style="cursor:pointer;margin:0;${selected ? 'border-color:rgba(29,78,216,.50);background:rgba(29,78,216,.04);' : ''}">
+    return `<label class="azCard shift-card ${selected ? 'selected' : ''}" style="cursor:pointer;margin:0;${selected ? 'border-color:rgba(29,78,216,.50);background:rgba(29,78,216,.04);' : ''}">
         <div style="display:flex;gap:12px;align-items:flex-start;">
           <input type="radio" name="pos" value="${escapeHtml(key)}" ${selected ? "checked" : ""} style="margin-top:4px;"/>
           <div style="flex:1;">
@@ -2094,14 +2018,12 @@ function renderShiftSelection(userData, saveUserPatch) {
             <div style="margin-top:10px;font-weight:1000;color:rgba(22,163,74,1);font-size:13px;">${escapeHtml(pay)}</div>
           </div>
         </div>
-      </label>
-    `;
+      </label>`;
   }
 
   function shiftCard(key, title, hours, desc, selectedKey) {
     const selected = selectedKey === key;
-    return `
-      <label class="azCard shift-card ${selected ? 'selected' : ''}" style="cursor:pointer;margin:0;${selected ? 'border-color:rgba(29,78,216,.50);background:rgba(29,78,216,.04);' : ''}">
+    return `<label class="azCard shift-card ${selected ? 'selected' : ''}" style="cursor:pointer;margin:0;${selected ? 'border-color:rgba(29,78,216,.50);background:rgba(29,78,216,.04);' : ''}">
         <div style="display:flex;gap:12px;align-items:flex-start;">
           <input type="radio" name="shift" value="${escapeHtml(key)}" ${selected ? "checked" : ""} style="margin-top:4px;"/>
           <div style="flex:1;">
@@ -2110,8 +2032,7 @@ function renderShiftSelection(userData, saveUserPatch) {
             <div class="azCardSub" style="margin-top:4px;">${escapeHtml(desc)}</div>
           </div>
         </div>
-      </label>
-    `;
+      </label>`;
   }
 
   document.getElementById("btnShiftSave").onclick = async () => {
@@ -2132,13 +2053,12 @@ function renderShiftSelection(userData, saveUserPatch) {
 
 function renderFootwear(userData, saveUserPatch, publicData) {
   const status = getStepStatus("footwear", userData);
-  
+
   if (status.isLocked) {
     setPage(
       "Safety Footwear",
       "Locked",
-      `
-        <div class="azCard" style="text-align:center;padding:40px 24px;">
+      `<div class="azCard" style="text-align:center;padding:40px 24px;">
           <div style="width:64px;height:64px;border-radius:999px;background:rgba(2,6,23,.06);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:rgba(2,6,23,.40);">
             ${azIcon("lock")}
           </div>
@@ -2149,18 +2069,16 @@ function renderFootwear(userData, saveUserPatch, publicData) {
           <a class="btn primary" href="#shift" style="display:block;width:100%;border-radius:16px;padding:14px;">
             Go to Shift Selection
           </a>
-        </div>
-      `
+        </div>`
     );
     return;
   }
-  
+
   if (status.isDone) {
     setPage(
       "Safety Footwear",
       "Completed",
-      `
-        <div class="azCard" style="text-align:center;padding:40px 24px;background:linear-gradient(135deg,rgba(22,163,74,.08),rgba(22,163,74,.02));border-color:rgba(22,163,74,.25);">
+      `<div class="azCard" style="text-align:center;padding:40px 24px;background:linear-gradient(135deg,rgba(22,163,74,.08),rgba(22,163,74,.02));border-color:rgba(22,163,74,.25);">
           <div style="width:80px;height:80px;border-radius:999px;background:rgba(22,163,74,.10);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:rgba(22,163,74,1);">
             ${azIcon("checkCircle")}
           </div>
@@ -2172,8 +2090,7 @@ function renderFootwear(userData, saveUserPatch, publicData) {
           <a class="btn primary" href="#i9" style="display:block;width:100%;border-radius:16px;padding:16px;">
             Continue to I-9 Verification
           </a>
-        </div>
-      `
+        </div>`
     );
     return;
   }
@@ -2183,89 +2100,87 @@ function renderFootwear(userData, saveUserPatch, publicData) {
   const steps = userData?.steps || [];
 
   function ackRow(id, checked, text) {
-    return `
-      <label class="checkrow" style="
+    return `<label class="checkrow" style="
         display:flex;gap:12px;align-items:flex-start;
         padding:14px;border:1px solid rgba(229,234,242,.95);
         border-radius:16px;margin-top:10px;cursor:pointer;
         background:#fff;transition:all .2s;
       " onmouseover="this.style.borderColor='rgba(29,78,216,.30)';this.style.background='rgba(29,78,216,.02)'" 
-      onmouseout="this.style.borderColor='rgba(229,234,242,.95)';this.style.background='#fff'">
+       onmouseout="this.style.borderColor='rgba(229,234,242,.95)';this.style.background='#fff'">
         <input type="checkbox" id="${escapeHtml(id)}" ${checked ? "checked" : ""} style="width:20px;height:20px;margin-top:2px;accent-color:#2563eb;"/>
         <span style="font-size:13px;line-height:1.5;color:rgba(2,6,23,.80);">${escapeHtml(text)}</span>
-      </label>
-    `;
+      </label>`;
   }
 
   setPage(
     fwPublic.programTitle || "Safety Footwear Program",
     "Required for all warehouse and production positions",
     `
-      <div class="azCard" style="border-left:4px solid rgba(220,38,38,.50);">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-          <div style="color:rgba(220,38,38,1);">${azIcon("alert")}</div>
-          <div class="azCardTitle" style="color:rgba(220,38,38,1);">Mandatory Requirement</div>
-        </div>
-        <div class="muted" style="line-height:1.6;">
-          Approved safety footwear is <strong>mandatory</strong> for all operational positions. 
-          You must have proper safety shoes <strong>before your first day</strong>. 
-          Failure to comply will result in rescheduling your start date.
-        </div>
-      </div>
+  <div class="azCard" style="background:rgba(220,38,38,.04);border-color:rgba(220,38,38,.15);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="color:rgba(220,38,38,1);">${azIcon("alert")}</div>
+      <div class="azCardTitle" style="color:rgba(220,38,38,1);">Mandatory Requirement</div>
+    </div>
+    <div class="muted" style="line-height:1.6;">
+      Approved safety footwear is <strong>mandatory</strong> for all operational positions. 
+      You must have proper safety shoes <strong>before your first day</strong>. 
+      Failure to comply will result in rescheduling your start date.
+    </div>
+  </div>
 
-      <div class="azCard" style="margin-top:16px;">
-        ${sectionHeader("Program Overview")}
-        <div class="muted" style="line-height:1.7;">
-          SunPower provides a <strong>$100 reimbursement</strong> for approved safety footwear 
-          purchased through our designated vendor. This benefit is processed in your first 
-          paycheck after verification of purchase and attendance.
-        </div>
-        
-        <div style="margin-top:16px;padding:16px;background:rgba(29,78,216,.04);border-radius:12px;border:1px solid rgba(29,78,216,.15);">
-          <div style="font-weight:1000;font-size:13px;color:rgba(29,78,216,1);margin-bottom:8px;">Required Specifications:</div>
-          <ul class="ul" style="margin:0;padding-left:18px;">
-            <li style="margin:6px 0;">Steel toe or composite toe protection</li>
-            <li style="margin:6px 0;">Slip-resistant outsole</li>
-            <li style="margin:6px 0;">Electrical hazard protection (EH rated)</li>
-            <li style="margin:6px 0;">Ankle support (6" minimum height recommended)</li>
-            <li style="margin:6px 0;">ASTM F2413-18 compliant</li>
-          </ul>
-        </div>
-      </div>
+  <div class="azCard" style="margin-top:16px;">
+    ${sectionHeader("Program Overview")}
+    <div class="muted" style="line-height:1.7;">
+      SunPower provides a <strong>$100 reimbursement</strong> for approved safety footwear 
+      purchased through our designated vendor. This benefit is processed in your first 
+      paycheck after verification of purchase and attendance.
+    </div>
+    
+    <div style="margin-top:16px;padding:16px;background:rgba(29,78,216,.04);border-radius:12px;border:1px solid rgba(29,78,216,.15);">
+      <div style="font-weight:1000;font-size:13px;color:rgba(29,78,216,1);margin-bottom:8px;">Required Specifications:</div>
+      <ul class="ul" style="margin:0;padding-left:18px;">
+        <li style="margin:6px 0;">Steel toe or composite toe protection</li>
+        <li style="margin:6px 0;">Slip-resistant outsole</li>
+        <li style="margin:6px 0;">Electrical hazard protection (EH rated)</li>
+        <li style="margin:6px 0;">Ankle support (6" minimum height recommended)</li>
+        <li style="margin:6px 0;">ASTM F2413-18 compliant</li>
+      </ul>
+    </div>
+  </div>
 
-      <div class="azCard" style="margin-top:16px;">
-        ${sectionHeader("Required Acknowledgements")}
-        ${ackRow("fwAck1", fw.ack1, "I understand that safety footwear is mandatory and must be worn at all times in operational areas.")}
-        ${ackRow("fwAck2", fw.ack2, "I will purchase approved safety footwear before my first scheduled work day.")}
-        ${ackRow("fwAck3", fw.ack3, "I understand that purchases must be made through the designated vendor to qualify for reimbursement.")}
-        ${ackRow("fwAck4", fw.ack4, "I understand that reimbursement requires proof of purchase and completion of first week.")}
-        ${ackRow("fwAck5", fw.ack5, "I acknowledge that failure to wear proper safety equipment may result in disciplinary action.")}
+  <div class="azCard" style="margin-top:16px;">
+    ${sectionHeader("Required Acknowledgements")}
+    ${ackRow("fwAck1", fw.ack1, "I understand that safety footwear is mandatory and must be worn at all times in operational areas.")}
+    ${ackRow("fwAck2", fw.ack2, "I will purchase approved safety footwear before my first scheduled work day.")}
+    ${ackRow("fwAck3", fw.ack3, "I understand that purchases must be made through the designated vendor to qualify for reimbursement.")}
+    ${ackRow("fwAck4", fw.ack4, "I understand that reimbursement requires proof of purchase and completion of first week.")}
+    ${ackRow("fwAck5", fw.ack5, "I acknowledge that failure to wear proper safety equipment may result in disciplinary action.")}
 
-        <button class="btn primary" id="btnFootwearComplete" type="button"
-          style="display:block;width:100%;text-align:center;border-radius:16px;padding:16px;margin-top:20px;">
-          Complete Safety Footwear Requirement
-        </button>
-       
-        <div class="small muted" style="margin-top:12px;line-height:1.4;text-align:center;">
-          By clicking complete, you certify that you understand and agree to all requirements above.
-        </div>
-      </div>
+    <button class="btn primary" id="btnFootwearComplete" type="button"
+      style="display:block;width:100%;text-align:center;border-radius:16px;padding:16px;margin-top:20px;">
+      Complete Safety Footwear Requirement
+    </button>
+   
+    <div class="small muted" style="margin-top:12px;line-height:1.4;text-align:center;">
+      By clicking complete, you certify that you understand and agree to all requirements above.
+    </div>
+  </div>
 
-      <div class="azCard" style="margin-top:16px;background:rgba(2,6,23,.03);">
-        <div class="azCardTitle">🛒 Purchase Your Safety Shoes</div>
-        <div class="muted" style="line-height:1.6;margin-top:8px;">
-          Visit our designated safety footwear vendor to browse approved styles 
-          and complete your purchase. Use your employee ID at checkout.
-        </div>
-        <a class="btn ghost" href="${escapeHtml(fwPublic.shopUrl)}" target="_blank" rel="noopener" style="display:block;width:100%;text-align:center;margin-top:12px;border-radius:16px;">
-          Open Safety Footwear Store
-        </a>
-      </div>
-    `
+  <div class="azCard" style="margin-top:16px;background:rgba(2,6,23,.03);">
+    <div class="azCardTitle">🛒 Purchase Your Safety Shoes</div>
+    <div class="muted" style="line-height:1.6;margin-top:8px;">
+      Visit our designated safety footwear vendor to browse approved styles 
+      and complete your purchase. Use your employee ID at checkout.
+    </div>
+    <a class="btn ghost" href="${escapeHtml(fwPublic.shopUrl)}" target="_blank" rel="noopener" style="display:block;width:100%;text-align:center;margin-top:12px;border-radius:16px;">
+      Open Safety Footwear Store
+    </a>
+  </div>
+`
   );
 
   const btn = document.getElementById("btnFootwearComplete");
-  
+
   const syncBtn = () => {
     const a1 = document.getElementById("fwAck1")?.checked;
     const a2 = document.getElementById("fwAck2")?.checked;
@@ -2281,7 +2196,7 @@ function renderFootwear(userData, saveUserPatch, publicData) {
       btn.textContent = allAcks ? "Complete Safety Footwear Requirement" : "Confirm All Items Above";
     }
   };
-  
+
   ["fwAck1", "fwAck2", "fwAck3", "fwAck4", "fwAck5"].forEach(x => {
     const el = document.getElementById(x);
     if (el) el.addEventListener("change", syncBtn);
@@ -2321,13 +2236,12 @@ function renderFootwear(userData, saveUserPatch, publicData) {
 
 function renderI9(userData, saveUserPatch) {
   const status = getStepStatus("i9", userData);
-  
+
   if (status.isLocked) {
     setPage(
       "I-9 Verification",
       "Locked",
-      `
-        <div class="azCard" style="text-align:center;padding:40px 24px;">
+      `<div class="azCard" style="text-align:center;padding:40px 24px;">
           <div style="width:64px;height:64px;border-radius:999px;background:rgba(2,6,23,.06);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:rgba(2,6,23,.40);">
             ${azIcon("lock")}
           </div>
@@ -2338,18 +2252,16 @@ function renderI9(userData, saveUserPatch) {
           <a class="btn primary" href="#footwear" style="display:block;width:100%;border-radius:16px;padding:14px;">
             Go to Safety Footwear
           </a>
-        </div>
-      `
+        </div>`
     );
     return;
   }
-  
+
   if (status.isDone) {
     setPage(
       "I-9 Verification",
       "Completed",
-      `
-        <div class="azCard" style="text-align:center;padding:40px 24px;background:linear-gradient(135deg,rgba(22,163,74,.08),rgba(22,163,74,.02));border-color:rgba(22,163,74,.25);">
+      `<div class="azCard" style="text-align:center;padding:40px 24px;background:linear-gradient(135deg,rgba(22,163,74,.08),rgba(22,163,74,.02));border-color:rgba(22,163,74,.25);">
           <div style="width:80px;height:80px;border-radius:999px;background:rgba(22,163,74,.10);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:rgba(22,163,74,1);">
             ${azIcon("checkCircle")}
           </div>
@@ -2361,8 +2273,7 @@ function renderI9(userData, saveUserPatch) {
           <a class="btn primary" href="#photo_badge" style="display:block;width:100%;border-radius:16px;padding:16px;">
             Continue to Photo Badge
           </a>
-        </div>
-      `
+        </div>`
     );
     return;
   }
@@ -2371,111 +2282,111 @@ function renderI9(userData, saveUserPatch) {
     "I-9 Verification",
     "Employment eligibility verification",
     `
-      <div class="azCard" style="background:linear-gradient(135deg,rgba(29,78,216,.06),rgba(29,78,216,.02));border-color:rgba(29,78,216,.20);">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-          <div style="color:rgba(29,78,216,1);">${azIcon("file")}</div>
-          <div class="azCardTitle" style="color:rgba(29,78,216,1);">Federal Employment Verification</div>
-        </div>
-        <div class="muted" style="line-height:1.7;">
-          The Form I-9 is a federal requirement administered by the Department of Homeland Security 
-          and U.S. Citizenship and Immigration Services (USCIS). All employees must complete 
-          this verification within <strong>3 business days</strong> of their start date.
-        </div>
-      </div>
+  <div class="azCard">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="color:rgba(29,78,216,1);">${azIcon("file")}</div>
+      <div class="azCardTitle" style="color:rgba(29,78,216,1);">Federal Employment Verification</div>
+    </div>
+    <div class="muted" style="line-height:1.7;">
+      The Form I-9 is a federal requirement administered by the Department of Homeland Security 
+      and U.S. Citizenship and Immigration Services (USCIS). All employees must complete 
+      this verification within <strong>3 business days</strong> of their start date.
+    </div>
+  </div>
 
-      <div class="azCard" style="margin-top:16px;">
-        ${sectionHeader("Document Requirements")}
-        <div class="muted" style="line-height:1.7;margin-bottom:16px;">
-          You must present <strong>original, unexpired documents</strong> in person. 
-          Photocopies, digital copies, or notarized copies are not acceptable.
-        </div>
+  <div class="azCard" style="margin-top:16px;">
+    ${sectionHeader("Document Requirements")}
+    <div class="muted" style="line-height:1.7;margin-bottom:16px;">
+      You must present <strong>original, unexpired documents</strong> in person. 
+      Photocopies, digital copies, or notarized copies are not acceptable.
+    </div>
 
-        <div style="display:grid;grid-template-columns:1fr;gap:12px;">
-          <div style="padding:16px;background:rgba(22,163,74,.06);border-radius:12px;border:1px solid rgba(22,163,74,.20);">
-            <div style="font-weight:1000;font-size:14px;color:rgba(22,163,74,1);margin-bottom:8px;">Option A: List A Document</div>
-            <div style="font-size:13px;color:rgba(2,6,23,.70);line-height:1.6;">
-              One document that establishes <strong>both identity and employment authorization</strong>
-              <ul style="margin:8px 0 0 0;padding-left:18px;">
-                <li>U.S. Passport or Passport Card</li>
-                <li>Permanent Resident Card (Form I-551)</li>
-                <li>Employment Authorization Document (Form I-766)</li>
-                <li>Foreign passport with I-551 stamp or I-94</li>
-              </ul>
-            </div>
-          </div>
-
-          <div style="padding:16px;background:rgba(245,158,11,.06);border-radius:12px;border:1px solid rgba(245,158,11,.20);">
-            <div style="font-weight:1000;font-size:14px;color:rgba(180,83,9,1);margin-bottom:8px;">Option B: List B + List C</div>
-            <div style="font-size:13px;color:rgba(2,6,23,.70);line-height:1.6;">
-              <strong>List B - Identity:</strong> Driver's license, state ID, school ID with photo, 
-              military ID, or government ID<br><br>
-              <strong>+</strong><br><br>
-              <strong>List C - Authorization:</strong> Social Security card (unrestricted), 
-              birth certificate, Certificate of Naturalization, or U.S. Citizen ID
-            </div>
-          </div>
+    <div style="display:grid;grid-template-columns:1fr;gap:12px;">
+      <div style="padding:16px;background:rgba(22,163,74,.06);border-radius:12px;border:1px solid rgba(22,163,74,.20);">
+        <div style="font-weight:1000;font-size:14px;color:rgba(22,163,74,1);margin-bottom:8px;">Option A: List A Document</div>
+        <div style="font-size:13px;color:rgba(2,6,23,.70);line-height:1.6;">
+          One document that establishes <strong>both identity and employment authorization</strong>
+          <ul style="margin:8px 0 0 0;padding-left:18px;">
+            <li>U.S. Passport or Passport Card</li>
+            <li>Permanent Resident Card (Form I-551)</li>
+            <li>Employment Authorization Document (Form I-766)</li>
+            <li>Foreign passport with I-551 stamp or I-94</li>
+          </ul>
         </div>
       </div>
 
-      <div class="azCard" style="margin-top:16px;">
-        ${sectionHeader("Verification Process")}
-        <div style="display:flex;flex-direction:column;gap:16px;">
-          <div style="display:flex;gap:12px;">
-            <div style="width:32px;height:32px;border-radius:999px;background:rgba(29,78,216,.10);display:flex;align-items:center;justify-content:center;color:rgba(29,78,216,1);font-weight:1000;font-size:14px;flex-shrink:0;">1</div>
-            <div>
-              <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Day 1: Document Presentation</div>
-              <div class="muted" style="font-size:12px;margin-top:4px;">Bring original documents to HR during orientation</div>
-            </div>
-          </div>
-          <div style="display:flex;gap:12px;">
-            <div style="width:32px;height:32px;border-radius:999px;background:rgba(29,78,216,.10);display:flex;align-items:center;justify-content:center;color:rgba(29,78,216,1);font-weight:1000;font-size:14px;flex-shrink:0;">2</div>
-            <div>
-              <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Day 1-3: Physical Examination</div>
-              <div class="muted" style="font-size:12px;margin-top:4px;">HR representative examines and verifies documents</div>
-            </div>
-          </div>
-          <div style="display:flex;gap:12px;">
-            <div style="width:32px;height:32px;border-radius:999px;background:rgba(29,78,216,.10);display:flex;align-items:center;justify-content:center;color:rgba(29,78,216,1);font-weight:1000;font-size:14px;flex-shrink:0;">3</div>
-            <div>
-              <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">E-Verify Confirmation</div>
-              <div class="muted" style="font-size:12px;margin-top:4px;">Federal database verification (if applicable)</div>
-            </div>
-          </div>
+      <div style="padding:16px;background:rgba(245,158,11,.06);border-radius:12px;border:1px solid rgba(245,158,11,.20);">
+        <div style="font-weight:1000;font-size:14px;color:rgba(180,83,9,1);margin-bottom:8px;">Option B: List B + List C</div>
+        <div style="font-size:13px;color:rgba(2,6,23,.70);line-height:1.6;">
+          <strong>List B - Identity:</strong> Driver's license, state ID, school ID with photo, 
+          military ID, or government ID<br><br>
+          <strong>+</strong><br><br>
+          <strong>List C - Authorization:</strong> Social Security card (unrestricted), 
+          birth certificate, Certificate of Naturalization, or U.S. Citizen ID
         </div>
       </div>
+    </div>
+  </div>
 
-      <div class="azCard" style="margin-top:16px;">
-        ${sectionHeader("Acknowledgement")}
-        <label class="checkrow" style="display:flex;gap:12px;align-items:flex-start;padding:16px;border:1px solid rgba(229,234,242,.95);border-radius:16px;cursor:pointer;background:#fff;">
-          <input type="checkbox" id="i9Ack" style="width:20px;height:20px;margin-top:2px;accent-color:#2563eb;"/>
-          <span style="font-size:13px;line-height:1.6;color:rgba(2,6,23,.80);">
-            I understand that I must bring original, unexpired documents on my first day 
-            to complete the Form I-9 verification process. I understand that failure to 
-            provide acceptable documentation within 3 business days will result in termination 
-            of employment as required by federal law.
-          </span>
-        </label>
-
-        <button class="btn primary" id="btnI9Save" type="button"
-          style="display:block;width:100%;text-align:center;border-radius:16px;padding:16px;margin-top:20px;">
-          Confirm I-9 Understanding
-        </button>
-      </div>
-
-      <div class="azCard" style="margin-top:16px;background:rgba(220,38,38,.04);border-color:rgba(220,38,38,.15);">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-          <div style="color:rgba(220,38,38,1);">${azIcon("alert")}</div>
-          <div class="azCardTitle" style="color:rgba(220,38,38,1);">Important Notice</div>
+  <div class="azCard" style="margin-top:16px;">
+    ${sectionHeader("Verification Process")}
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;gap:12px;">
+        <div style="width:32px;height:32px;border-radius:999px;background:rgba(29,78,216,.10);display:flex;align-items:center;justify-content:center;color:rgba(29,78,216,1);font-weight:1000;font-size:14px;flex-shrink:0;">1</div>
+        <div>
+          <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Day 1: Document Presentation</div>
+          <div class="muted" style="font-size:12px;margin-top:4px;">Bring original documents to HR during orientation</div>
         </div>
-        <div class="muted" style="line-height:1.6;margin-bottom:16px;">
-          Payroll activation is contingent upon successful I-9 completion. 
-          No exceptions can be made per federal regulations 8 U.S.C. § 1324a.
-        </div>
-        <a class="btn primary" href="tel:911" style="display:block;width:100%;text-align:center;border-radius:16px;background:rgba(220,38,38,1);">
-          Call 911 Emergency
-        </a>
       </div>
-    `
+      <div style="display:flex;gap:12px;">
+        <div style="width:32px;height:32px;border-radius:999px;background:rgba(29,78,216,.10);display:flex;align-items:center;justify-content:center;color:rgba(29,78,216,1);font-weight:1000;font-size:14px;flex-shrink:0;">2</div>
+        <div>
+          <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Day 1-3: Physical Examination</div>
+          <div class="muted" style="font-size:12px;margin-top:4px;">HR representative examines and verifies documents</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;">
+        <div style="width:32px;height:32px;border-radius:999px;background:rgba(29,78,216,.10);display:flex;align-items:center;justify-content:center;color:rgba(29,78,216,1);font-weight:1000;font-size:14px;flex-shrink:0;">3</div>
+        <div>
+          <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">E-Verify Confirmation</div>
+          <div class="muted" style="font-size:12px;margin-top:4px;">Federal database verification (if applicable)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="azCard" style="margin-top:16px;">
+    ${sectionHeader("Acknowledgement")}
+    <label class="checkrow" style="display:flex;gap:12px;align-items:flex-start;padding:16px;border:1px solid rgba(229,234,242,.95);border-radius:16px;cursor:pointer;background:#fff;">
+      <input type="checkbox" id="i9Ack" style="width:20px;height:20px;margin-top:2px;accent-color:#2563eb;"/>
+      <span style="font-size:13px;line-height:1.6;color:rgba(2,6,23,.80);">
+        I understand that I must bring original, unexpired documents on my first day 
+        to complete the Form I-9 verification process. I understand that failure to 
+        provide acceptable documentation within 3 business days will result in termination 
+        of employment as required by federal law.
+      </span>
+    </label>
+
+    <button class="btn primary" id="btnI9Save" type="button"
+      style="display:block;width:100%;text-align:center;border-radius:16px;padding:16px;margin-top:20px;">
+      Confirm I-9 Understanding
+    </button>
+  </div>
+
+  <div class="azCard" style="margin-top:16px;background:rgba(220,38,38,.04);border-color:rgba(220,38,38,.15);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="color:rgba(220,38,38,1);">${azIcon("alert")}</div>
+      <div class="azCardTitle" style="color:rgba(220,38,38,1);">Important Notice</div>
+    </div>
+    <div class="muted" style="line-height:1.6;margin-bottom:16px;">
+      Payroll activation is contingent upon successful I-9 completion. 
+      No exceptions can be made per federal regulations 8 U.S.C. § 1324a.
+    </div>
+    <a class="btn primary" href="tel:911" style="display:block;width:100%;text-align:center;border-radius:16px;background:rgba(220,38,38,1);">
+      Call 911 Emergency
+    </a>
+  </div>
+`
   );
 
   document.getElementById("btnI9Save").onclick = async () => {
@@ -2495,13 +2406,12 @@ function renderI9(userData, saveUserPatch) {
 
 function renderPhotoBadge(userData) {
   const status = getStepStatus("photo_badge", userData);
-  
+
   if (status.isLocked) {
     setPage(
       "Photo Badge",
       "Locked",
-      `
-        <div class="azCard" style="text-align:center;padding:40px 24px;">
+      `<div class="azCard" style="text-align:center;padding:40px 24px;">
           <div style="width:64px;height:64px;border-radius:999px;background:rgba(2,6,23,.06);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:rgba(2,6,23,.40);">
             ${azIcon("lock")}
           </div>
@@ -2512,8 +2422,7 @@ function renderPhotoBadge(userData) {
           <a class="btn primary" href="#i9" style="display:block;width:100%;border-radius:16px;padding:14px;">
             Go to I-9 Verification
           </a>
-        </div>
-      `
+        </div>`
     );
     return;
   }
@@ -2522,45 +2431,45 @@ function renderPhotoBadge(userData) {
     "Photo Badge",
     "Facility identification badge",
     `
-      <div class="azCard" style="text-align:center;padding:40px 24px;">
-        <div style="width:80px;height:80px;border-radius:999px;background:rgba(245,158,11,.10);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:rgba(245,158,11,1);">
-          ${azIcon("user")}
-        </div>
-        <div style="font-weight:1000;font-size:20px;color:rgba(2,6,23,.85);margin-bottom:8px;">Photo Badge Required</div>
-        <div style="font-size:14px;color:rgba(2,6,23,.60);line-height:1.6;margin-bottom:24px;">
-          Your photo identification badge will be created during your first day orientation.<br>
-          This step <strong>cannot be completed online</strong> and requires your physical presence 
-          at the facility.
-        </div>
+  <div class="azCard" style="text-align:center;padding:40px 24px;">
+    <div style="width:80px;height:80px;border-radius:999px;background:rgba(245,158,11,.10);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:rgba(245,158,11,1);">
+      ${azIcon("user")}
+    </div>
+    <div style="font-weight:1000;font-size:20px;color:rgba(2,6,23,.85);margin-bottom:8px;">Photo Badge Required</div>
+    <div style="font-size:14px;color:rgba(2,6,23,.60);line-height:1.6;margin-bottom:24px;">
+      Your photo identification badge will be created during your first day orientation.<br>
+      This step <strong>cannot be completed online</strong> and requires your physical presence 
+      at the facility.
+    </div>
 
-        <div class="azCard" style="text-align:left;margin-bottom:24px;background:rgba(245,158,11,.04);border-color:rgba(245,158,11,.20);">
-          <div class="azCardTitle">What to Expect:</div>
-          <ul style="margin:12px 0 0 0;padding-left:18px;line-height:1.8;">
-            <li>Professional photo taken by HR staff</li>
-            <li>Badge printed with your name, photo, and employee ID</li>
-            <li>Access permissions programmed for your assigned areas</li>
-            <li>Safety briefing on badge usage and facility access</li>
-          </ul>
-        </div>
+    <div class="azCard" style="text-align:left;margin-bottom:24px;background:rgba(245,158,11,.04);border-color:rgba(245,158,11,.20);">
+      <div class="azCardTitle">What to Expect:</div>
+      <ul style="margin:12px 0 0 0;padding-left:18px;line-height:1.8;">
+        <li>Professional photo taken by HR staff</li>
+        <li>Badge printed with your name, photo, and employee ID</li>
+        <li>Access permissions programmed for your assigned areas</li>
+        <li>Safety briefing on badge usage and facility access</li>
+      </ul>
+    </div>
 
-        <div style="padding:16px;background:rgba(2,6,23,.05);border-radius:12px;margin-bottom:24px;">
-          <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);margin-bottom:8px;">⏳ Status: Pending First Day</div>
-          <div class="muted" style="font-size:13px;">
-            This step will be marked complete after you receive your badge during orientation.
-          </div>
-        </div>
-
-        ${status.isDone ? `
-          <div style="padding:16px;background:rgba(22,163,74,.10);border-radius:12px;border:1px solid rgba(22,163,74,.25);">
-            <div style="font-weight:1000;font-size:14px;color:rgba(22,163,74,1);">✓ Badge Completed</div>
-          </div>
-        ` : `
-          <a class="btn primary" href="#firstday" style="display:block;width:100%;border-radius:16px;padding:16px;">
-            View First Day Instructions
-          </a>
-        `}
+    <div style="padding:16px;background:rgba(2,6,23,.05);border-radius:12px;margin-bottom:24px;">
+      <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);margin-bottom:8px;">⏳ Status: Pending First Day</div>
+      <div class="muted" style="font-size:13px;">
+        This step will be marked complete after you receive your badge during orientation.
       </div>
-    `
+    </div>
+
+    ${status.isDone ? `
+      <div style="padding:16px;background:rgba(22,163,74,.10);border-radius:12px;border:1px solid rgba(22,163,74,.25);">
+        <div style="font-weight:1000;font-size:14px;color:rgba(22,163,74,1);">✓ Badge Completed</div>
+      </div>
+    ` : `
+      <a class="btn primary" href="#firstday" style="display:block;width:100%;border-radius:16px;padding:16px;">
+        View First Day Instructions
+      </a>
+    `}
+  </div>
+`
   );
 }
 
@@ -2569,996 +2478,732 @@ function renderW4(userData) {
     "Tax Forms (W-4)",
     "Federal tax withholding setup",
     `
-      <div class="w4-info">
-        <div class="w4-title">${azIcon("file")} W-4 Employee's Withholding Certificate</div>
-        <div class="w4-text">
-          Complete your W-4 to determine federal income tax withholding from your paycheck. 
-          This form must be completed during your first week of employment.
-        </div>
-      </div>
+  <div class="w4-info">
+    <div class="w4-title">${azIcon("file")} W-4 Employee's Withholding Certificate</div>
+    <div class="w4-text">
+      Complete your W-4 form to determine the correct amount of federal income tax 
+      to withhold from your paycheck. This must be completed within your first week 
+      of employment.
+    </div>
+  </div>
 
-      <div class="azCard">
-        <div class="azCardTitle">When to Complete</div>
-        <div class="muted" style="line-height:1.7;margin-top:12px;">
-          <strong>Timing:</strong> During your first week, after you have received your first paycheck estimate.<br><br>
-          <strong>Location:</strong> HR office or through the employee self-service portal (link provided after first day).<br><br>
-          <strong>Assistance:</strong> HR representatives are available to answer questions and provide guidance 
-          on withholding allowances and deductions.
-        </div>
-      </div>
+  <div class="azCard">
+    <div class="azCardTitle">W-4 Completion Steps</div>
+    <div class="azCardSub" style="line-height:1.6;margin-top:12px;">
+      <ol style="padding-left:20px;line-height:1.8;">
+        <li>Access the W-4 form through your payroll portal after first day</li>
+        <li>Complete personal information (name, SSN, address, filing status)</li>
+        <li>Complete Steps 2-4 if applicable (multiple jobs, dependents, other adjustments)</li>
+        <li>Sign and date the form</li>
+        <li>Submit to HR for processing</li>
+      </ol>
+    </div>
+  </div>
 
-      <div class="azCard" style="margin-top:16px;">
-        <div class="azCardTitle">Information You'll Need</div>
-        <ul style="margin:12px 0 0 0;padding-left:18px;line-height:1.8;color:rgba(2,6,23,.70);">
-          <li>Social Security Number</li>
-          <li>Filing status (Single, Married, Head of Household)</li>
-          <li>Number of dependents and other credits</li>
-          <li>Additional income or jobs (Step 2)</li>
-          <li>Other adjustments (Step 4) - optional</li>
-        </ul>
-      </div>
+  <div class="azCard" style="margin-top:16px;background:rgba(29,78,216,.04);border-color:rgba(29,78,216,.20);">
+    <div class="azCardTitle">Important Information</div>
+    <div class="azCardSub" style="line-height:1.6;margin-top:12px;">
+      <strong>When to Complete:</strong> During your first week<br>
+      <strong>Where:</strong> Payroll portal or HR office<br>
+      <strong>Questions:</strong> Contact HR at (800) 876-4321<br><br>
+      For detailed instructions, visit the IRS website or speak with an HR representative.
+    </div>
+    <a class="btn ghost" href="https://www.irs.gov/forms-pubs/about-form-w-4" target="_blank" rel="noopener" 
+      style="display:block;width:100%;text-align:center;margin-top:12px;border-radius:16px;">
+      Visit IRS W-4 Information
+    </a>
+  </div>
 
-      <div class="azCard" style="margin-top:16px;">
-        <div class="azCardTitle">State Tax Forms</div>
-        <div class="muted" style="line-height:1.7;margin-top:12px;">
-          Depending on your state of residence, you may also need to complete state tax withholding forms. 
-          HR will provide these during your first week if applicable.
-        </div>
-      </div>
-
-      <div class="azCard" style="margin-top:16px;padding:24px;text-align:center;background:rgba(229,234,242,.40);">
-        <div style="font-size:48px;margin-bottom:16px;">📋</div>
-        <div style="font-weight:1000;font-size:16px;color:rgba(2,6,23,.85);margin-bottom:8px;">Available After First Week</div>
-        <div style="font-size:13px;color:rgba(2,6,23,.60);line-height:1.5;">
-          The W-4 form will be available in your portal after you complete your first week.<br>
-          For immediate assistance, contact HR at (800) 876-4321.
-        </div>
-      </div>
-    `
+  <div class="azCard" style="margin-top:16px;">
+    <div class="azCardTitle">State Tax Forms</div>
+    <div class="azCardSub" style="line-height:1.6;">
+      Depending on your state of residence, you may need to complete additional 
+      state tax withholding forms. HR will provide these during your first week 
+      if required.
+    </div>
+  </div>
+`
   );
 }
 
-function renderFirstDay(userData, recordData) {
+function renderFirstDay(userData) {
   const status = getStepStatus("firstday", userData);
-  
-  if (status.isLocked) {
-    setPage(
-      "First Day",
-      "Locked",
-      `
-        <div class="azCard" style="text-align:center;padding:40px 24px;">
-          <div style="width:64px;height:64px;border-radius:999px;background:rgba(2,6,23,.06);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:rgba(2,6,23,.40);">
-            ${azIcon("lock")}
-          </div>
-          <div style="font-weight:1000;font-size:16px;color:rgba(2,6,23,.85);margin-bottom:8px;">Step Locked</div>
-          <div style="font-size:13px;color:rgba(2,6,23,.60);line-height:1.5;margin-bottom:20px;">
-            Please complete previous onboarding steps before accessing first day instructions.
-          </div>
-          <a class="btn primary" href="#progress" style="display:block;width:100%;border-radius:16px;padding:14px;">
-            View Progress
-          </a>
-        </div>
-      `
-    );
-    return;
-  }
 
-  const appt = recordData?.appointment || userData?.appointment || {};
-  
   setPage(
-    "First Day Instructions",
-    "Everything you need for a successful start",
+    "First Day Preparation",
+    "Everything you need for your first day",
     `
-      <div class="azCard" style="background:linear-gradient(135deg,rgba(29,78,216,.08),rgba(22,163,74,.04));border-color:rgba(29,78,216,.20);padding:24px;">
-        <div style="text-align:center;">
-          <div style="font-size:48px;margin-bottom:16px;">🎉</div>
-          <div style="font-weight:1000;font-size:22px;color:rgba(2,6,23,.85);margin-bottom:8px;">Your First Day at SunPower</div>
-          <div style="font-size:14px;color:rgba(2,6,23,.60);">
-            We're excited to have you join our team!
-          </div>
+  <div class="azCard" style="background:linear-gradient(135deg,rgba(29,78,216,.08),rgba(22,163,74,.04));border-color:rgba(29,78,216,.20);">
+    <div style="text-align:center;padding:20px;">
+      <div style="font-size:48px;margin-bottom:12px;">🎉</div>
+      <div style="font-weight:1000;font-size:20px;color:rgba(2,6,23,.85);margin-bottom:8px;">Your First Day at SunPower</div>
+      <div style="font-size:14px;color:rgba(2,6,23,.60);">
+        Welcome to the team! Here's everything you need to know.
+      </div>
+    </div>
+  </div>
+
+  <div class="azCard" style="margin-top:16px;">
+    <div class="azCardTitle">📋 What to Bring</div>
+    <div style="margin-top:12px;">
+      <div style="display:flex;gap:12px;margin-bottom:16px;">
+        <div style="width:32px;height:32px;border-radius:999px;background:rgba(29,78,216,.10);display:flex;align-items:center;justify-content:center;color:rgba(29,78,216,1);font-weight:1000;font-size:14px;flex-shrink:0;">1</div>
+        <div>
+          <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Original I-9 Documents</div>
+          <div class="muted" style="font-size:12px;margin-top:4px;">Unexpired documents for employment verification</div>
         </div>
       </div>
-
-      <div class="azCard" style="margin-top:16px;">
-        <div class="azCardTitle">📍 Appointment Details</div>
-        <div style="margin-top:16px;display:grid;grid-template-columns:1fr;gap:16px;">
-          <div style="display:flex;gap:12px;align-items:center;">
-            <div style="width:40px;height:40px;border-radius:10px;background:rgba(29,78,216,.10);display:flex;align-items:center;justify-content:center;color:rgba(29,78,216,1);">
-              ${azIcon("calendar")}
-            </div>
-            <div>
-              <div style="font-size:11px;color:rgba(2,6,23,.50);text-transform:uppercase;letter-spacing:0.5px;">Date</div>
-              <div style="font-weight:1000;font-size:15px;color:rgba(2,6,23,.85);">${safe(appt.date, "To be confirmed by HR")}</div>
-            </div>
-          </div>
-          
-          <div style="display:flex;gap:12px;align-items:center;">
-            <div style="width:40px;height:40px;border-radius:10px;background:rgba(29,78,216,.10);display:flex;align-items:center;justify-content:center;color:rgba(29,78,216,1);">
-              ${azIcon("clock")}
-            </div>
-            <div>
-              <div style="font-size:11px;color:rgba(2,6,23,.50);text-transform:uppercase;letter-spacing:0.5px;">Time</div>
-              <div style="font-weight:1000;font-size:15px;color:rgba(2,6,23,.85);">${safe(appt.time, "To be confirmed by HR")}</div>
-            </div>
-          </div>
-          
-          <div style="display:flex;gap:12px;align-items:center;">
-            <div style="width:40px;height:40px;border-radius:10px;background:rgba(29,78,216,.10);display:flex;align-items:center;justify-content:center;color:rgba(29,78,216,1);">
-              ${azIcon("info")}
-            </div>
-            <div>
-              <div style="font-size:11px;color:rgba(2,6,23,.50);text-transform:uppercase;letter-spacing:0.5px;">Location</div>
-              <div style="font-weight:1000;font-size:15px;color:rgba(2,6,23,.85);">${safe(appt.address, "To be confirmed by HR")}</div>
-            </div>
-          </div>
-        </div>
-        
-        ${appt.notes ? `
-          <div style="margin-top:16px;padding:12px;background:rgba(245,158,11,.08);border-radius:10px;border:1px solid rgba(245,158,11,.20);">
-            <div style="font-weight:1000;font-size:12px;color:rgba(180,83,9,1);margin-bottom:4px;">Special Instructions:</div>
-            <div style="font-size:13px;color:rgba(2,6,23,.70);">${escapeHtml(appt.notes)}</div>
-          </div>
-        ` : ''}
-      </div>
-
-      <div class="azCard" style="margin-top:16px;">
-        <div class="azCardTitle">✅ What to Bring</div>
-        <div style="margin-top:16px;display:flex;flex-direction:column;gap:12px;">
-          <div style="display:flex;gap:12px;align-items:flex-start;">
-            <div style="width:24px;height:24px;border-radius:6px;background:rgba(22,163,74,.15);display:flex;align-items:center;justify-content:center;color:rgba(22,163,74,1);font-weight:1000;font-size:12px;flex-shrink:0;">✓</div>
-            <div>
-              <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Government-issued Photo ID</div>
-              <div class="muted" style="font-size:12px;">Driver's license, state ID, or passport for I-9 verification</div>
-            </div>
-          </div>
-          
-          <div style="display:flex;gap:12px;align-items:flex-start;">
-            <div style="width:24px;height:24px;border-radius:6px;background:rgba(22,163,74,.15);display:flex;align-items:center;justify-content:center;color:rgba(22,163,74,1);font-weight:1000;font-size:12px;flex-shrink:0;">✓</div>
-            <div>
-              <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Social Security Card or Birth Certificate</div>
-              <div class="muted" style="font-size:12px;">Original documents for employment verification</div>
-            </div>
-          </div>
-          
-          <div style="display:flex;gap:12px;align-items:flex-start;">
-            <div style="width:24px;height:24px;border-radius:6px;background:rgba(22,163,74,.15);display:flex;align-items:center;justify-content:center;color:rgba(22,163,74,1);font-weight:1000;font-size:12px;flex-shrink:0;">✓</div>
-            <div>
-              <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Safety Footwear</div>
-              <div class="muted" style="font-size:12px;">Steel/composite toe boots - required for facility access</div>
-            </div>
-          </div>
-          
-          <div style="display:flex;gap:12px;align-items:flex-start;">
-            <div style="width:24px;height:24px;border-radius:6px;background:rgba(22,163,74,.15);display:flex;align-items:center;justify-content:center;color:rgba(22,163,74,1);font-weight:1000;font-size:12px;flex-shrink:0;">✓</div>
-            <div>
-              <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Smartphone</div>
-              <div class="muted" style="font-size:12px;">To download the SunPower Employee App during orientation</div>
-            </div>
-          </div>
-          
-          <div style="display:flex;gap:12px;align-items:flex-start;">
-            <div style="width:24px;height:24px;border-radius:6px;background:rgba(22,163,74,.15);display:flex;align-items:center;justify-content:center;color:rgba(22,163,74,1);font-weight:1000;font-size:12px;flex-shrink:0;">✓</div>
-            <div>
-              <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Banking Information</div>
-              <div class="muted" style="font-size:12px;">Voided check or bank details for direct deposit setup</div>
-            </div>
-          </div>
-          
-          <div style="display:flex;gap:12px;align-items:flex-start;">
-            <div style="width:24px;height:24px;border-radius:6px;background:rgba(22,163,74,.15);display:flex;align-items:center;justify-content:center;color:rgba(22,163,74,1);font-weight:1000;font-size:12px;flex-shrink:0;">✓</div>
-            <div>
-              <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Water Bottle & Light Snack</div>
-              <div class="muted" style="font-size:12px;">Orientation is 4-6 hours with breaks</div>
-            </div>
-          </div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;">
+        <div style="width:32px;height:32px;border-radius:999px;background:rgba(29,78,216,.10);display:flex;align-items:center;justify-content:center;color:rgba(29,78,216,1);font-weight:1000;font-size:14px;flex-shrink:0;">2</div>
+        <div>
+          <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Safety Footwear</div>
+          <div class="muted" style="font-size:12px;margin-top:4px;">ASTM F2413-18 compliant safety shoes</div>
         </div>
       </div>
-
-      <div class="azCard" style="margin-top:16px;">
-        <div class="azCardTitle">📱 SunPower Employee App</div>
-        <div class="muted" style="line-height:1.7;margin-top:12px;">
-          During orientation, you will download and set up the SunPower Employee App. This app provides:
-        </div>
-        <ul style="margin:12px 0 0 0;padding-left:18px;line-height:1.8;color:rgba(2,6,23,.70);">
-          <li>Access to your schedule and timecard</li>
-          <li>Pay stubs and tax documents</li>
-          <li>Benefits enrollment and management</li>
-          <li>Direct communication with HR</li>
-          <li>Safety training videos and resources</li>
-          <li>Emergency alerts and company news</li>
-        </ul>
-      </div>
-
-      <div class="azCard" style="margin-top:16px;">
-        <div class="azCardTitle">🎬 First Day Agenda</div>
-        <div style="margin-top:16px;display:flex;flex-direction:column;gap:16px;">
-          <div style="display:flex;gap:12px;">
-            <div style="width:60px;text-align:right;font-weight:1000;font-size:13px;color:rgba(2,6,23,.60);flex-shrink:0;">8:00 AM</div>
-            <div style="flex:1;padding-left:12px;border-left:2px solid rgba(229,234,242,.95);">
-              <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Check-in & Welcome</div>
-              <div class="muted" style="font-size:12px;">HR reception, badge photo, facility tour</div>
-            </div>
-          </div>
-          
-          <div style="display:flex;gap:12px;">
-            <div style="width:60px;text-align:right;font-weight:1000;font-size:13px;color:rgba(2,6,23,.60);flex-shrink:0;">9:00 AM</div>
-            <div style="flex:1;padding-left:12px;border-left:2px solid rgba(229,234,242,.95);">
-              <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">I-9 Verification</div>
-              <div class="muted" style="font-size:12px;">Document review and E-Verify processing</div>
-            </div>
-          </div>
-          
-          <div style="display:flex;gap:12px;">
-            <div style="width:60px;text-align:right;font-weight:1000;font-size:13px;color:rgba(2,6,23,.60);flex-shrink:0;">10:30 AM</div>
-            <div style="flex:1;padding-left:12px;border-left:2px solid rgba(229,234,242,.95);">
-              <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Safety Orientation</div>
-              <div class="muted" style="font-size:12px;">PPE requirements, emergency procedures, facility rules</div>
-            </div>
-          </div>
-          
-          <div style="display:flex;gap:12px;">
-            <div style="width:60px;text-align:right;font-weight:1000;font-size:13px;color:rgba(2,6,23,.60);flex-shrink:0;">12:00 PM</div>
-            <div style="flex:1;padding-left:12px;border-left:2px solid rgba(229,234,242,.95);">
-              <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Lunch Break</div>
-              <div class="muted" style="font-size:12px;">Cafeteria orientation, meet your team</div>
-            </div>
-          </div>
-          
-          <div style="display:flex;gap:12px;">
-            <div style="width:60px;text-align:right;font-weight:1000;font-size:13px;color:rgba(2,6,23,.60);flex-shrink:0;">1:00 PM</div>
-            <div style="flex:1;padding-left:12px;border-left:2px solid rgba(229,234,242,.95);">
-              <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Systems Setup</div>
-              <div class="muted" style="font-size:12px;">App download, direct deposit, benefits overview</div>
-            </div>
-          </div>
-          
-          <div style="display:flex;gap:12px;">
-            <div style="width:60px;text-align:right;font-weight:1000;font-size:13px;color:rgba(2,6,23,.60);flex-shrink:0;">2:30 PM</div>
-            <div style="flex:1;padding-left:12px;border-left:2px solid rgba(229,234,242,.95);">
-              <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Department Assignment</div>
-              <div class="muted" style="font-size:12px;">Meet your supervisor, workstation assignment</div>
-            </div>
-          </div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;">
+        <div style="width:32px;height:32px;border-radius:999px;background:rgba(29,78,216,.10);display:flex;align-items:center;justify-content:center;color:rgba(29,78,216,1);font-weight:1000;font-size:14px;flex-shrink:0;">3</div>
+        <div>
+          <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Valid ID</div>
+          <div class="muted" style="font-size:12px;margin-top:4px;">Driver's license or government-issued photo ID</div>
         </div>
       </div>
-
-      <div class="azCard" style="margin-top:16px;background:rgba(220,38,38,.04);border-color:rgba(220,38,38,.15);">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-          <div style="color:rgba(220,38,38,1);">${azIcon("alert")}</div>
-          <div class="azCardTitle" style="color:rgba(220,38,38,1);">Important Reminders</div>
+      <div style="display:flex;gap:12px;">
+        <div style="width:32px;height:32px;border-radius:999px;background:rgba(29,78,216,.10);display:flex;align-items:center;justify-content:center;color:rgba(29,78,216,1);font-weight:1000;font-size:14px;flex-shrink:0;">4</div>
+        <div>
+          <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Banking Information</div>
+          <div class="muted" style="font-size:12px;margin-top:4px;">For direct deposit setup (voided check or bank statement)</div>
         </div>
-        <ul style="margin:0;padding-left:18px;line-height:1.8;color:rgba(2,6,23,.70);">
-          <li>Arrive 15 minutes early to allow time for parking and check-in</li>
-          <li>Wear comfortable business casual attire (safety gear provided)</li>
-          <li>No open-toed shoes, sandals, or heels permitted in facility</li>
-          <li>Bring a positive attitude and questions for your team!</li>
-        </ul>
       </div>
+    </div>
+  </div>
 
-      ${!status.isDone ? `
-        <button class="btn primary" id="btnFirstDayComplete" type="button" style="width:100%;border-radius:16px;padding:16px;margin-top:20px;">
-          I Completed My First Day
-        </button>
-        <div class="small muted" style="margin-top:12px;line-height:1.4;text-align:center;">
-          Only click this button after you have completed your first day orientation.
-        </div>
-      ` : `
-        <div class="azCard" style="margin-top:20px;text-align:center;background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.25);">
-          <div style="font-weight:1000;font-size:16px;color:rgba(22,163,74,1);">✓ First Day Completed!</div>
-          <div style="margin-top:8px;color:rgba(2,6,23,.60);">Welcome to the SunPower team!</div>
-        </div>
-      `}
-    `
+  <div class="azCard" style="margin-top:16px;">
+    <div class="azCardTitle">⏰ Schedule</div>
+    <div class="azCardSub" style="line-height:1.6;margin-top:12px;">
+      <strong>Arrival Time:</strong> 30 minutes before your scheduled shift<br>
+      <strong>Location:</strong> HR Office - Main Entrance<br>
+      <strong>Duration:</strong> First day includes 4-hour orientation<br><br>
+      Your supervisor will meet you at the HR office and escort you to your assigned area.
+    </div>
+  </div>
+
+  <div class="azCard" style="margin-top:16px;">
+    <div class="azCardTitle">👔 Dress Code</div>
+    <div class="azCardSub" style="line-height:1.6;margin-top:12px;">
+      <strong>Required:</strong> Safety footwear, comfortable work clothes<br>
+      <strong>Provided:</strong> Safety vest, hard hat (if required), safety glasses<br>
+      <strong>Prohibited:</strong> Loose jewelry, open-toe shoes, shorts, tank tops
+    </div>
+  </div>
+
+  <div class="azCard" style="margin-top:16px;background:rgba(22,163,74,.04);border-color:rgba(22,163,74,.20);">
+    <div class="azCardTitle">✅ Day 1 Checklist</div>
+    <div style="margin-top:12px;">
+      <label style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(229,234,242,.95);">
+        <input type="checkbox" style="width:18px;height:18px;accent-color:#2563eb;"/>
+        <span style="font-size:13px;">Arrive 30 minutes early</span>
+      </label>
+      <label style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(229,234,242,.95);">
+        <input type="checkbox" style="width:18px;height:18px;accent-color:#2563eb;"/>
+        <span style="font-size:13px;">Check in at HR office</span>
+      </label>
+      <label style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(229,234,242,.95);">
+        <input type="checkbox" style="width:18px;height:18px;accent-color:#2563eb;"/>
+        <span style="font-size:13px;">Complete I-9 verification</span>
+      </label>
+      <label style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(229,234,242,.95);">
+        <input type="checkbox" style="width:18px;height:18px;accent-color:#2563eb;"/>
+        <span style="font-size:13px;">Get photo badge taken</span>
+      </label>
+      <label style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(229,234,242,.95);">
+        <input type="checkbox" style="width:18px;height:18px;accent-color:#2563eb;"/>
+        <span style="font-size:13px;">Safety orientation</span>
+      </label>
+      <label style="display:flex;gap:10px;align-items:center;padding:10px 0;">
+        <input type="checkbox" style="width:18px;height:18px;accent-color:#2563eb;"/>
+        <span style="font-size:13px;">Meet your supervisor and team</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="azCard" style="margin-top:16px;">
+    <div class="azCardTitle">📞 Emergency Contacts</div>
+    <div class="azCardSub" style="line-height:1.8;margin-top:12px;">
+      <strong>HR Emergency:</strong> (800) 876-4321<br>
+      <strong>Facility Security:</strong> (615) 786-9543<br>
+      <strong>Site Manager:</strong> (502) 467-8976
+    </div>
+  </div>
+
+  ${!status.isDone ? `
+    <button class="btn primary" id="btnFirstDayComplete" type="button" 
+      style="display:block;width:100%;text-align:center;border-radius:16px;padding:16px;margin-top:20px;">
+      Mark First Day Complete (After Orientation)
+    </button>
+  ` : `
+    <div class="azCard" style="margin-top:16px;background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.25);text-align:center;padding:20px;">
+      <div style="font-weight:1000;font-size:16px;color:rgba(22,163,74,1);">✓ First Day Completed!</div>
+      <div style="font-size:13px;color:rgba(2,6,23,.60);margin-top:8px;">Welcome to the SunPower team!</div>
+    </div>
+  `}
+`
   );
-  
+
   const btn = document.getElementById("btnFirstDayComplete");
   if (btn) {
     btn.onclick = async () => {
-      if (!confirm("Confirm that you have completed your first day orientation?")) return;
-      
       const steps = (userData.steps || []).map(s =>
         s.id === "firstday" ? ({ ...s, done: true }) : s
       );
-      
-      if (isFirebaseConfigured()) {
-        const userRef = doc(db, "users", userData.uid);
-        await updateDoc(userRef, { steps, status: "active", updatedAt: serverTimestamp() });
-      }
-      
+      await saveUserPatch({ steps, stage: "completed" });
       triggerConfetti();
-      uiToast("Congratulations! Onboarding complete.");
+      uiToast("Congratulations on completing your first day!");
       location.hash = "#firstday";
     };
   }
 }
 
-// ===============================
-// PAYROLL - Professional Placeholder
-// ===============================
-function renderPayroll(recordData) {
+function renderPayroll(userData) {
   setPage(
     "Payroll",
-    "Compensation and payment information",
+    "Compensation and tax information",
     `
-      <div class="azCard" style="text-align:center;padding:40px 24px;">
-        <div style="font-size:64px;margin-bottom:16px;">💰</div>
-        <div style="font-weight:1000;font-size:20px;color:rgba(2,6,23,.85);margin-bottom:12px;">Payroll Access Coming Soon</div>
-        <div style="font-size:14px;color:rgba(2,6,23,.60);line-height:1.6;max-width:400px;margin:0 auto;">
-          Your payroll information will be available after your first pay period.<br><br>
-          <strong>Payment Schedule:</strong> Weekly (every Friday)<br>
-          <strong>First Check:</strong> Available after completing your first week
-        </div>
+  <div class="azCard">
+    <div style="text-align:center;padding:20px;">
+      <div style="font-size:48px;margin-bottom:12px;">💰</div>
+      <div style="font-weight:1000;font-size:20px;color:rgba(2,6,23,.85);margin-bottom:8px;">Payroll Portal</div>
+      <div style="font-size:14px;color:rgba(2,6,23,.60);">
+        Access your pay stubs, tax forms, and direct deposit information
       </div>
+    </div>
+  </div>
 
-      <div class="azCard" style="margin-top:16px;">
-        <div class="azCardTitle">What You'll Access Here</div>
-        <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div class="azCard" style="margin:0;text-align:center;">
-            <div style="font-size:32px;margin-bottom:8px;">📄</div>
-            <div style="font-weight:1000;font-size:13px;">Pay Stubs</div>
-            <div class="muted" style="font-size:11px;margin-top:4px;">View and download</div>
-          </div>
-          <div class="azCard" style="margin:0;text-align:center;">
-            <div style="font-size:32px;margin-bottom:8px;">🏦</div>
-            <div style="font-weight:1000;font-size:13px;">Direct Deposit</div>
-            <div class="muted" style="font-size:11px;margin-top:4px;">Manage banking</div>
-          </div>
-          <div class="azCard" style="margin:0;text-align:center;">
-            <div style="font-size:32px;margin-bottom:8px;">📊</div>
-            <div style="font-weight:1000;font-size:13px;">Tax Forms</div>
-            <div class="muted" style="font-size:11px;margin-top:4px;">W-2, W-4 updates</div>
-          </div>
-          <div class="azCard" style="margin:0;text-align:center;">
-            <div style="font-size:32px;margin-bottom:8px;">📈</div>
-            <div style="font-weight:1000;font-size:13px;">Earnings History</div>
-            <div class="muted" style="font-size:11px;margin-top:4px;">Year-to-date totals</div>
-          </div>
-        </div>
-      </div>
+  <div class="azCard" style="margin-top:16px;">
+    <div class="azCardTitle">Pay Schedule</div>
+    <div class="azCardSub" style="line-height:1.6;margin-top:12px;">
+      <strong>Frequency:</strong> Bi-weekly (every other Friday)<br>
+      <strong>First Paycheck:</strong> After completion of first full pay period<br>
+      <strong>Direct Deposit:</strong> Required - setup on first day<br><br>
+      Pay stubs will be available in the employee portal 2 days before payday.
+    </div>
+  </div>
 
-      <div class="azCard" style="margin-top:16px;">
-        <div class="azCardTitle">Direct Deposit Setup</div>
-        <div class="muted" style="line-height:1.7;margin-top:12px;">
-          Direct deposit will be configured during your first day orientation with HR.<br><br>
-          Please bring a voided check or your bank account and routing numbers to complete setup.
+  <div class="azCard" style="margin-top:16px;">
+    <div class="azCardTitle">Quick Links</div>
+    <div class="azQuickGrid" style="margin-top:12px;">
+      <a class="azQuick" href="#w4">
+        <div class="azQuickTop">
+          <div class="azQuickIcon">${azIcon("file")}</div>
         </div>
-        <a class="btn ghost" href="#help" style="display:block;width:100%;text-align:center;margin-top:16px;border-radius:16px;">
-          Contact Payroll Department
-        </a>
-      </div>
-    `
+        <div>W-4 Form</div>
+        <div class="azQuickSub">Tax withholding</div>
+      </a>
+      <a class="azQuick" href="#deposit">
+        <div class="azQuickTop">
+          <div class="azQuickIcon">${azIcon("briefcase")}</div>
+        </div>
+        <div>Direct Deposit</div>
+        <div class="azQuickSub">Banking info</div>
+      </a>
+      <a class="azQuick" href="#hours">
+        <div class="azQuickTop">
+          <div class="azQuickIcon">${azIcon("clock")}</div>
+        </div>
+        <div>My Hours</div>
+        <div class="azQuickSub">Time tracking</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="azCard" style="margin-top:16px;background:rgba(245,158,11,.04);border-color:rgba(245,158,11,.20);">
+    <div class="azCardTitle">⚠️ Important Notice</div>
+    <div class="azCardSub" style="line-height:1.6;margin-top:12px;">
+      Payroll access will be activated after your first day of work and 
+      completion of I-9 verification. For immediate questions, contact 
+      HR at (800) 876-4321.
+    </div>
+  </div>
+`
   );
 }
 
-// ===============================
-// TIME OFF / BENEFITS
-// ===============================
-function renderTimeOff(recordData) {
+function renderTimeOff(userData) {
   setPage(
     "Benefits & Time Off",
-    "Employee benefits and time management",
+    "Vacation, sick leave, and employee benefits",
     `
-      <div class="benefits-grid">
-        <div class="benefit-card">
-          <div class="benefit-header">
-            <div class="benefit-icon" style="background:rgba(220,38,38,.10);">🏥</div>
-            <div class="benefit-title">Health & Wellness</div>
-          </div>
-          <ul class="benefit-list">
-            <li>Medical, dental, and vision coverage – Day 1 for full-time</li>
-            <li>Wellness program – Physical and mental health resources</li>
-            <li>EAP – Free confidential counseling</li>
-            <li>Protective equipment – Safety footwear and uniforms provided</li>
-          </ul>
-        </div>
-
-        <div class="benefit-card">
-          <div class="benefit-header">
-            <div class="benefit-icon" style="background:rgba(22,163,74,.10);">💰</div>
-            <div class="benefit-title">Compensation & Savings</div>
-          </div>
-          <ul class="benefit-list">
-            <li>Weekly pay – Fast access to pay stubs</li>
-            <li>401(k) with company match – Start saving for retirement</li>
-            <li>Referral bonuses – Earn for recommending talent</li>
-            <li>Educational assistance – Financial support for studies</li>
-          </ul>
-        </div>
-
-        <div class="benefit-card">
-          <div class="benefit-header">
-            <div class="benefit-icon" style="background:rgba(245,158,11,.10);">📅</div>
-            <div class="benefit-title">Time & Flexibility</div>
-          </div>
-          <ul class="benefit-list">
-            <li>Accrued PTO – Vacation and personal days by tenure</li>
-            <li>Paid family leave – For new parents</li>
-            <li>Time off requests – Easy digital management</li>
-            <li>Flexible shift policies – Swap or coverage options</li>
-          </ul>
-        </div>
-
-        <div class="benefit-card">
-          <div class="benefit-header">
-            <div class="benefit-icon" style="background:rgba(29,78,216,.10);">🎓</div>
-            <div class="benefit-title">Growth & Development</div>
-          </div>
-          <ul class="benefit-list">
-            <li>Internal training – Safety, technical, and leadership</li>
-            <li>Mentorship program – Professional development guidance</li>
-            <li>Training portal – Online course access</li>
-            <li>Internal promotions – Advancement opportunities</li>
-          </ul>
-        </div>
-
-        <div class="benefit-card">
-          <div class="benefit-header">
-            <div class="benefit-icon" style="background:rgba(124,58,237,.10);">🛡️</div>
-            <div class="benefit-title">Safety & Support</div>
-          </div>
-          <ul class="benefit-list">
-            <li>Report incident – Quick portal form</li>
-            <li>Safety policies – Always accessible</li>
-            <li>Safety & HR contact – Direct from your profile</li>
-            <li>Equipment/tools request – Get what you need</li>
-          </ul>
-        </div>
-
-        <div class="benefit-card">
-          <div class="benefit-header">
-            <div class="benefit-icon" style="background:rgba(14,165,233,.10);">🏢</div>
-            <div class="benefit-title">Perks & Discounts</div>
-          </div>
-          <ul class="benefit-list">
-            <li>Corporate discounts – Local and national partners</li>
-            <li>Recognition program – Points for achievements</li>
-            <li>Team events – Social activities and meetings</li>
-            <li>Mobile employee app – Schedules, pay, news on your phone</li>
-          </ul>
-        </div>
+  <div class="benefits-grid">
+    <div class="benefit-card">
+      <div class="benefit-header">
+        <div class="benefit-icon" style="background:rgba(22,163,74,.10);color:rgba(22,163,74,1);">🏥</div>
+        <div class="benefit-title">Health Insurance</div>
       </div>
+      <ul class="benefit-list">
+        <li>Medical, dental, and vision coverage available</li>
+        <li>Coverage begins first of month after 60 days</li>
+        <li>Multiple plan options to fit your needs</li>
+        <li>Dependent coverage available</li>
+      </ul>
+    </div>
 
-      <div class="azCard" style="margin-top:16px;">
-        <div class="azCardTitle">Time Off Requests</div>
-        <div style="margin-top:16px;padding:24px;background:rgba(229,234,242,.40);border-radius:12px;text-align:center;">
-          <div style="font-size:48px;margin-bottom:12px;">🌴</div>
-          <div style="font-weight:1000;font-size:16px;color:rgba(2,6,23,.85);margin-bottom:8px;">PTO Management</div>
-          <div style="font-size:13px;color:rgba(2,6,23,.60);line-height:1.5;">
-            Request and track vacation, personal days, and sick time.<br>
-            Available after completing your first 90 days.
-          </div>
-        </div>
-        <a class="btn ghost" href="#help" style="display:block;width:100%;text-align:center;margin-top:16px;border-radius:16px;">
-          Contact HR About Time Off
-        </a>
+    <div class="benefit-card">
+      <div class="benefit-header">
+        <div class="benefit-icon" style="background:rgba(29,78,216,.10);color:rgba(29,78,216,1);">🏖️</div>
+        <div class="benefit-title">Paid Time Off</div>
       </div>
-    `
+      <ul class="benefit-list">
+        <li>Vacation: 10 days/year (prorated first year)</li>
+        <li>Sick leave: 6 days/year</li>
+        <li>Personal days: 2 days/year</li>
+        <li>Company holidays: 10 days/year</li>
+      </ul>
+    </div>
+
+    <div class="benefit-card">
+      <div class="benefit-header">
+        <div class="benefit-icon" style="background:rgba(245,158,11,.10);color:rgba(245,158,11,1);">💰</div>
+        <div class="benefit-title">Retirement</div>
+      </div>
+      <ul class="benefit-list">
+        <li>401(k) plan with company match</li>
+        <li>Match: 100% of first 3%, 50% of next 2%</li>
+        <li>Immediate vesting of company match</li>
+        <li>Eligible after 90 days of employment</li>
+      </ul>
+    </div>
+
+    <div class="benefit-card">
+      <div class="benefit-header">
+        <div class="benefit-icon" style="background:rgba(139,92,246,.10);color:rgba(139,92,246,1);">🎯</div>
+        <div class="benefit-title">Additional Perks</div>
+      </div>
+      <ul class="benefit-list">
+        <li>Employee discount program</li>
+        <li>Wellness program and gym discounts</li>
+        <li>Employee assistance program (EAP)</li>
+        <li>Referral bonuses for new hires</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="azCard" style="margin-top:16px;">
+    <div class="azCardTitle">Request Time Off</div>
+    <div class="azCardSub" style="line-height:1.6;margin-top:12px;">
+      Time off requests can be submitted through your supervisor after 
+      completing your first 90 days. For urgent time off needs during 
+      onboarding, contact HR directly at (800) 876-4321.
+    </div>
+    <a class="btn ghost" href="#help" style="display:block;width:100%;text-align:center;margin-top:12px;border-radius:16px;">
+      Contact HR About Time Off
+    </a>
+  </div>
+`
   );
 }
 
-// ===============================
-// HOURS - Placeholder
-// ===============================
-function renderHours(recordData) {
+function renderHours(userData) {
   setPage(
     "My Hours",
-    "Work hours and attendance",
+    "Weekly time summary",
     `
-      <div class="azCard" style="text-align:center;padding:40px 24px;">
-        <div style="font-size:64px;margin-bottom:16px;">⏱️</div>
-        <div style="font-weight:1000;font-size:20px;color:rgba(2,6,23,.85);margin-bottom:12px;">Hours Tracking Coming Soon</div>
-        <div style="font-size:14px;color:rgba(2,6,23,.60);line-height:1.6;max-width:400px;margin:0 auto;">
-          Your work hours will be displayed here after your first day.<br><br>
-          Track your weekly hours, overtime, and attendance history.
-        </div>
+  <div class="azCard">
+    <div style="text-align:center;padding:20px;">
+      <div style="font-size:48px;margin-bottom:12px;">⏱️</div>
+      <div style="font-weight:1000;font-size:20px;color:rgba(2,6,23,.85);margin-bottom:8px;">Hours Tracking</div>
+      <div style="font-size:14px;color:rgba(2,6,23,.60);">
+        Your weekly hours summary will appear here after your first day
       </div>
+    </div>
+  </div>
 
-      <div class="azCard" style="margin-top:16px;">
-        <div class="azCardTitle">Current Week Overview</div>
-        <div style="margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
-          <div style="text-align:center;padding:16px;background:rgba(229,234,242,.40);border-radius:12px;">
-            <div style="font-weight:1000;font-size:24px;color:rgba(2,6,23,.40);">--</div>
-            <div style="font-size:11px;color:rgba(2,6,23,.60);text-transform:uppercase;letter-spacing:0.5px;margin-top:4px;">Scheduled</div>
-          </div>
-          <div style="text-align:center;padding:16px;background:rgba(229,234,242,.40);border-radius:12px;">
-            <div style="font-weight:1000;font-size:24px;color:rgba(2,6,23,.40);">--</div>
-            <div style="font-size:11px;color:rgba(2,6,23,.60);text-transform:uppercase;letter-spacing:0.5px;margin-top:4px;">Worked</div>
-          </div>
-          <div style="text-align:center;padding:16px;background:rgba(229,234,242,.40);border-radius:12px;">
-            <div style="font-weight:1000;font-size:24px;color:rgba(2,6,23,.40);">--</div>
-            <div style="font-size:11px;color:rgba(2,6,23,.60);text-transform:uppercase;letter-spacing:0.5px;margin-top:4px;">Overtime</div>
-          </div>
+  <div class="azCard" style="margin-top:16px;">
+    <div class="azCardTitle">Current Week</div>
+    <div style="margin-top:12px;">
+      <div class="azPunchRow">
+        <div class="azPunchLeft">
+          <div class="azPunchType">Monday</div>
+          <div class="azPunchTime">--</div>
         </div>
+        <div class="azPunchTime">0.00 hrs</div>
       </div>
+      <div class="azPunchRow">
+        <div class="azPunchLeft">
+          <div class="azPunchType">Tuesday</div>
+          <div class="azPunchTime">--</div>
+        </div>
+        <div class="azPunchTime">0.00 hrs</div>
+      </div>
+      <div class="azPunchRow">
+        <div class="azPunchLeft">
+          <div class="azPunchType">Wednesday</div>
+          <div class="azPunchTime">--</div>
+        </div>
+        <div class="azPunchTime">0.00 hrs</div>
+      </div>
+      <div class="azPunchRow">
+        <div class="azPunchLeft">
+          <div class="azPunchType">Thursday</div>
+          <div class="azPunchTime">--</div>
+        </div>
+        <div class="azPunchTime">0.00 hrs</div>
+      </div>
+      <div class="azPunchRow">
+        <div class="azPunchLeft">
+          <div class="azPunchType">Friday</div>
+          <div class="azPunchTime">--</div>
+        </div>
+        <div class="azPunchTime">0.00 hrs</div>
+      </div>
+      <div class="azPunchRow">
+        <div class="azPunchLeft">
+          <div class="azPunchType">Saturday</div>
+          <div class="azPunchTime">--</div>
+        </div>
+        <div class="azPunchTime">0.00 hrs</div>
+      </div>
+      <div class="azPunchRow">
+        <div class="azPunchLeft">
+          <div class="azPunchType">Sunday</div>
+          <div class="azPunchTime">--</div>
+        </div>
+        <div class="azPunchTime">0.00 hrs</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding-top:16px;border-top:2px solid rgba(229,234,242,.95);display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-weight:1000;font-size:14px;">Weekly Total</div>
+      <div style="font-weight:1000;font-size:18px;color:rgba(29,78,216,1);">0.00 hrs</div>
+    </div>
+  </div>
 
-      <div class="azCard" style="margin-top:16px;">
-        <div class="azCardTitle">Attendance Policies</div>
-        <div class="muted" style="line-height:1.7;margin-top:12px;">
-          <strong>Punctuality matters.</strong> Consistent attendance is essential for operational 
-          success and team reliability. Your supervisor will review specific attendance 
-          expectations during orientation.<br><br>
-          For attendance questions or to report an absence, contact HR immediately at (800) 876-4321.
-        </div>
-      </div>
-    `
+  <div class="azCard" style="margin-top:16px;background:rgba(245,158,11,.04);border-color:rgba(245,158,11,.20);">
+    <div class="azCardTitle">⏳ Not Started Yet</div>
+    <div class="azCardSub" style="line-height:1.6;margin-top:12px;">
+      Your hours will be tracked starting from your first day of employment. 
+      Make sure to clock in and out using the time tracking system provided 
+      by your supervisor.
+    </div>
+  </div>
+`
   );
 }
 
-// ===============================
-// DIRECT DEPOSIT
-// ===============================
-function renderDeposit(recordData) {
+function renderDeposit(userData) {
   setPage(
     "Direct Deposit",
-    "Banking and payment setup",
+    "Setup your payroll direct deposit",
     `
-      <div class="azCard" style="text-align:center;padding:40px 24px;">
-        <div style="font-size:64px;margin-bottom:16px;">🏦</div>
-        <div style="font-weight:1000;font-size:20px;color:rgba(2,6,23,.85);margin-bottom:12px;">Setup on First Day</div>
-        <div style="font-size:14px;color:rgba(2,6,23,.60);line-height:1.6;max-width:400px;margin:0 auto;">
-          Direct deposit will be configured during your first day orientation.<br><br>
-          Please bring your banking information to complete setup with HR.
-        </div>
+  <div class="azCard">
+    <div style="text-align:center;padding:20px;">
+      <div style="font-size:48px;margin-bottom:12px;">🏦</div>
+      <div style="font-weight:1000;font-size:20px;color:rgba(2,6,23,.85);margin-bottom:8px;">Direct Deposit Setup</div>
+      <div style="font-size:14px;color:rgba(2,6,23,.60);">
+        Get your paycheck deposited directly to your bank account
       </div>
+    </div>
+  </div>
 
-      <div class="azCard" style="margin-top:16px;">
-        <div class="azCardTitle">What to Bring</div>
-        <div style="margin-top:16px;display:flex;flex-direction:column;gap:12px;">
-          <div style="display:flex;gap:12px;align-items:center;">
-            <div style="width:32px;height:32px;border-radius:8px;background:rgba(22,163,74,.10);display:flex;align-items:center;justify-content:center;color:rgba(22,163,74,1);font-weight:1000;">✓</div>
-            <div style="font-size:13px;color:rgba(2,6,23,.80);">Voided check, OR</div>
-          </div>
-          <div style="display:flex;gap:12px;align-items:center;">
-            <div style="width:32px;height:32px;border-radius:8px;background:rgba(22,163,74,.10);display:flex;align-items:center;justify-content:center;color:rgba(22,163,74,1);font-weight:1000;">✓</div>
-            <div style="font-size:13px;color:rgba(2,6,23,.80);">Bank account number and routing number</div>
-          </div>
-          <div style="display:flex;gap:12px;align-items:center;">
-            <div style="width:32px;height:32px;border-radius:8px;background:rgba(22,163,74,.10);display:flex;align-items:center;justify-content:center;color:rgba(22,163,74,1);font-weight:1000;">✓</div>
-            <div style="font-size:13px;color:rgba(2,6,23,.80);">Bank name and account type (checking/savings)</div>
-          </div>
-        </div>
-      </div>
+  <div class="azCard" style="margin-top:16px;">
+    <div class="azCardTitle">Required Information</div>
+    <div class="azCardSub" style="line-height:1.8;margin-top:12px;">
+      Bring the following to your first day orientation:<br><br>
+      <strong>1.</strong> Voided check, OR<br>
+      <strong>2.</strong> Bank statement with account details, OR<br>
+      <strong>3.</strong> Bank routing number and account number<br><br>
+      <strong>Account Type:</strong> Checking or Savings<br>
+      <strong>Bank Name:</strong> Full bank name<br>
+      <strong>Routing Number:</strong> 9-digit number<br>
+      <strong>Account Number:</strong> Your account number
+    </div>
+  </div>
 
-      <div class="azCard" style="margin-top:16px;">
-        <div class="azCardTitle">Payment Information</div>
-        <div class="muted" style="line-height:1.7;margin-top:12px;">
-          <strong>Pay Frequency:</strong> Weekly (every Friday)<br>
-          <strong>First Paycheck:</strong> Available the Friday after your first full week<br>
-          <strong>Pay Stub Access:</strong> Available through this portal and mobile app<br><br>
-          Questions about payroll? Contact HR Payroll at (800) 876-4321.
-        </div>
-      </div>
-    `
+  <div class="azCard" style="margin-top:16px;background:rgba(22,163,74,.04);border-color:rgba(22,163,74,.20);">
+    <div class="azCardTitle">✅ Benefits of Direct Deposit</div>
+    <div class="azCardSub" style="line-height:1.6;margin-top:12px;">
+      • Get paid faster - no waiting for checks<br>
+      • No risk of lost or stolen checks<br>
+      • Automatic deposit even when you're away<br>
+      • Environmentally friendly - less paper<br>
+      • Secure and reliable payment method
+    </div>
+  </div>
+
+  <div class="azCard" style="margin-top:16px;">
+    <div class="azCardTitle">When to Setup</div>
+    <div class="azCardSub" style="line-height:1.6;margin-top:12px;">
+      Direct deposit setup is completed during your first day orientation. 
+      HR will assist you in entering your banking information securely into 
+      the payroll system. Your first paycheck will be a paper check, and 
+      direct deposit will begin with your second paycheck.
+    </div>
+  </div>
+`
   );
 }
 
-// ===============================
-// NOTIFICATIONS
-// ===============================
-function renderNotifications(userData, recordData, publicData) {
-  const personal = Array.isArray(userData?.notifications) ? userData.notifications : [];
-  const recordNotifs = Array.isArray(recordData?.notifications) ? recordData.notifications : [];
-  const globalN = Array.isArray(publicData?.globalNotifications) ? publicData.globalNotifications : [];
-
-  const merged = [
-    ...globalN.map(x => ({ ...x, _scope: "company", _date: x.createdAt || new Date().toISOString() })),
-    ...recordNotifs.map(x => ({ ...x, _scope: "hr", _date: x.createdAt || new Date().toISOString() })),
-    ...personal.map(x => ({ ...x, _scope: "you", _date: x.createdAt || new Date().toISOString() }))
-  ].sort((a, b) => new Date(b._date) - new Date(a._date));
+function renderNotifications(userData, publicData) {
+  const globalNotifs = publicData?.globalNotifications || [];
+  const userNotifs = userData?.notifications || [];
+  const allNotifs = [...globalNotifs, ...userNotifs];
 
   setPage(
     "Notifications",
-    "Company updates and personal alerts",
+    "Company updates and announcements",
     `
-      <div class="azCard">
-        ${sectionHeader("Inbox")}
-        ${merged.length ? merged.map(n => `
-          <div class="azCard" style="box-shadow:none;border-radius:14px;margin-top:10px;${n._scope === 'company' ? 'border-left:3px solid rgba(29,78,216,.50);' : n._scope === 'hr' ? 'border-left:3px solid rgba(245,158,11,.50);' : ''}">
-            <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
-              <div style="font-weight:1000;font-size:13px;">${escapeHtml(n.title || "Update")}</div>
-              <span style="font-size:10px;padding:4px 10px;border-radius:999px;font-weight:900;text-transform:uppercase;letter-spacing:0.3px;${
-                n._scope === 'company' ? 'background:rgba(29,78,216,.10);color:rgba(29,78,216,1);' : 
-                n._scope === 'hr' ? 'background:rgba(245,158,11,.10);color:rgba(180,83,9,1);' : 
-                'background:rgba(2,6,23,.06);color:rgba(2,6,23,.60);'
-              }">${n._scope === "company" ? "Company" : n._scope === "hr" ? "HR" : "Personal"}</span>
-            </div>
-            <div class="muted" style="margin-top:10px;line-height:1.5;font-size:13px;">${escapeHtml(n.body || "")}</div>
-            ${n.route ? `
-              <a class="btn ghost" href="#${escapeHtml(n.route)}" style="margin-top:12px;width:100%;border-radius:16px;text-align:center;">
-                ${escapeHtml(n.action || "View")}
-              </a>
-            ` : ''}
-          </div>
-        `).join("") : `
-          <div style="text-align:center;padding:40px 20px;">
-            <div style="font-size:48px;margin-bottom:12px;">📭</div>
-            <div style="font-weight:1000;font-size:16px;color:rgba(2,6,23,.60);">No notifications yet</div>
-            <div style="font-size:13px;color:rgba(2,6,23,.50);margin-top:8px;">Check back for company updates</div>
-          </div>
-        `}
+  ${allNotifs.length === 0 ? `
+    <div class="azCard" style="text-align:center;padding:40px 24px;">
+      <div style="font-size:48px;margin-bottom:16px;">🔔</div>
+      <div style="font-weight:1000;font-size:16px;color:rgba(2,6,23,.85);margin-bottom:8px;">No Notifications Yet</div>
+      <div style="font-size:13px;color:rgba(2,6,23,.60);line-height:1.5;">
+        Important company updates and announcements will appear here.<br>
+        Check back regularly for new information.
       </div>
-    `
+    </div>
+  ` : `
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      ${allNotifs.map(n => `
+        <div class="azCard" style="${n.important ? 'border-color:rgba(220,38,38,.30);background:rgba(220,38,38,.02);' : ''}">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:40px;height:40px;border-radius:999px;background:${n.important ? 'rgba(220,38,38,.10)' : 'rgba(29,78,216,.10)'};display:flex;align-items:center;justify-content:center;color:${n.important ? 'rgba(220,38,38,1)' : 'rgba(29,78,216,1)'};font-size:20px;flex-shrink:0;">
+              ${n.important ? '🔴' : '📢'}
+            </div>
+            <div style="flex:1;">
+              <div style="font-weight:1000;font-size:14px;color:rgba(2,6,23,.85);">${escapeHtml(n.title)}</div>
+              <div class="muted" style="font-size:12px;margin-top:4px;">${escapeHtml(n.date || new Date().toLocaleDateString())}</div>
+              <div style="font-size:13px;color:rgba(2,6,23,.70);line-height:1.5;margin-top:8px;">${escapeHtml(n.body)}</div>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `}
+
+  <div class="azCard" style="margin-top:16px;">
+    <div class="azCardTitle">Notification Settings</div>
+    <div class="azCardSub" style="line-height:1.6;margin-top:12px;">
+      You will receive notifications for:<br>
+      • Schedule changes<br>
+      • Important company announcements<br>
+      • Benefits enrollment deadlines<br>
+      • Payroll reminders<br><br>
+      To update your notification preferences, contact HR.
+    </div>
+  </div>
+`
   );
 }
 
-// ===============================
-// HELP & SUPPORT
-// ===============================
-function renderHelp(publicData, empId, user) {
-  const h = publicData?.help || defaultPublicContent().help;
+function renderHelp(publicData) {
+  const help = publicData?.help || defaultPublicContent().help;
   const site = publicData?.site || defaultPublicContent().site;
 
   setPage(
     "Help & Support",
-    "Contact the SunPower HR team",
+    "Contact information and resources",
     `
-      <div class="azCard">
-        <div class="azCardTitle">HR Department</div>
-        <div class="muted" style="line-height:1.6;margin-top:12px;">
-          Our HR team is available to assist with payroll, benefits, scheduling, 
-          and any workplace concerns. Choose the best way to reach us below.
-        </div>
-
-        <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px;">
-          <a class="btn ghost" href="${escapeHtml(telLink(h.phone))}" style="display:flex;align-items:center;gap:12px;padding:16px;border-radius:16px;">
-            <div style="width:40px;height:40px;border-radius:10px;background:rgba(29,78,216,.10);display:flex;align-items:center;justify-content:center;color:rgba(29,78,216,1);">
-              ${azIcon("bell")}
-            </div>
-            <div style="flex:1;text-align:left;">
-              <div style="font-weight:1000;font-size:14px;">HR Main Line</div>
-              <div class="muted" style="font-size:12px;">${escapeHtml(h.phone)}</div>
-            </div>
-            ${azIcon("chevR")}
-          </a>
-
-          <a class="btn ghost" href="${escapeHtml(`mailto:${h.email}`)}" style="display:flex;align-items:center;gap:12px;padding:16px;border-radius:16px;">
-            <div style="width:40px;height:40px;border-radius:10px;background:rgba(29,78,216,.10);display:flex;align-items:center;justify-content:center;color:rgba(29,78,216,1);">
-              ${azIcon("message")}
-            </div>
-            <div style="flex:1;text-align:left;">
-              <div style="font-weight:1000;font-size:14px;">Email HR</div>
-              <div class="muted" style="font-size:12px;">${escapeHtml(h.email)}</div>
-            </div>
-            ${azIcon("chevR")}
-          </a>
-
-          <a class="btn ghost" href="#chat" style="display:flex;align-items:center;gap:12px;padding:16px;border-radius:16px;">
-            <div style="width:40px;height:40px;border-radius:10px;background:rgba(29,78,216,.10);display:flex;align-items:center;justify-content:center;color:rgba(29,78,216,1);">
-              ${azIcon("chat")}
-            </div>
-            <div style="flex:1;text-align:left;">
-              <div style="font-weight:1000;font-size:14px;">Live Chat</div>
-              <div class="muted" style="font-size:12px;">Message HR directly</div>
-            </div>
-            ${azIcon("chevR")}
-          </a>
-        </div>
+  <div class="azCard" style="background:rgba(29,78,216,.04);border-color:rgba(29,78,216,.20);">
+    <div style="text-align:center;padding:20px;">
+      <div style="font-size:48px;margin-bottom:12px;">🆘</div>
+      <div style="font-weight:1000;font-size:20px;color:rgba(2,6,23,.85);margin-bottom:8px;">We're Here to Help</div>
+      <div style="font-size:14px;color:rgba(2,6,23,.60);line-height:1.5;">
+        ${escapeHtml(help.text)}
       </div>
+    </div>
+  </div>
 
-      <div class="azCard" style="margin-top:16px;">
-        <div class="azCardTitle">Department Contacts</div>
-        <div style="margin-top:16px;display:flex;flex-direction:column;gap:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(229,234,242,.40);border-radius:10px;">
-            <div>
-              <div style="font-weight:1000;font-size:13px;">Site Manager</div>
-              <div class="muted" style="font-size:12px;">Facility operations</div>
-            </div>
-            <a href="${escapeHtml(telLink(site.managerPhone))}" style="color:rgba(29,78,216,1);font-weight:1000;font-size:13px;">
-              ${escapeHtml(site.managerPhone)}
-            </a>
-          </div>
-          
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(229,234,242,.40);border-radius:10px;">
-            <div>
-              <div style="font-weight:1000;font-size:13px;">Safety Supervisor</div>
-              <div class="muted" style="font-size:12px;">Safety concerns & incidents</div>
-            </div>
-            <a href="${escapeHtml(telLink(site.safetyPhone))}" style="color:rgba(29,78,216,1);font-weight:1000;font-size:13px;">
-              ${escapeHtml(site.safetyPhone)}
-            </a>
-          </div>
-          
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(229,234,242,.40);border-radius:10px;">
-            <div>
-              <div style="font-weight:1000;font-size:13px;">Payroll Department</div>
-              <div class="muted" style="font-size:12px;">Paychecks, taxes, direct deposit</div>
-            </div>
-            <a href="${escapeHtml(telLink(h.phone))}" style="color:rgba(29,78,216,1);font-weight:1000;font-size:13px;">
-              ${escapeHtml(h.phone)}
-            </a>
-          </div>
+  <div class="azCard" style="margin-top:16px;">
+    <div class="azCardTitle">Contact HR</div>
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:12px;">
+      <a href="${telLink(help.phone)}" class="azMoreItem" style="text-decoration:none;color:inherit;">
+        <div>
+          <div style="font-weight:1000;">📞 Phone</div>
+          <div class="muted" style="font-size:12px;margin-top:4px;">${escapeHtml(help.phone)}</div>
         </div>
-      </div>
+        <div class="azMoreArrow">${azIcon("chevR")}</div>
+      </a>
+      <a href="mailto:${escapeHtml(help.email)}" class="azMoreItem" style="text-decoration:none;color:inherit;">
+        <div>
+          <div style="font-weight:1000;">✉️ Email</div>
+          <div class="muted" style="font-size:12px;margin-top:4px;">${escapeHtml(help.email)}</div>
+        </div>
+        <div class="azMoreArrow">${azIcon("chevR")}</div>
+      </a>
+      <a href="#chat" class="azMoreItem" style="text-decoration:none;color:inherit;">
+        <div>
+          <div style="font-weight:1000;">💬 Live Chat</div>
+          <div class="muted" style="font-size:12px;margin-top:4px;">Message HR directly</div>
+        </div>
+        <div class="azMoreArrow">${azIcon("chevR")}</div>
+      </a>
+    </div>
+  </div>
 
-      <div class="azCard" style="margin-top:16px;background:rgba(220,38,38,.04);border-color:rgba(220,38,38,.15);">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-          <div style="color:rgba(220,38,38,1);">${azIcon("alert")}</div>
-          <div class="azCardTitle" style="color:rgba(220,38,38,1);">Emergency</div>
-        </div>
-        <div class="muted" style="line-height:1.6;margin-bottom:16px;">
-          For immediate danger or medical emergencies, call 911 first. 
-          Then notify your supervisor and HR as soon as possible.
-        </div>
-        <a class="btn primary" href="tel:911" style="display:block;width:100%;text-align:center;border-radius:16px;background:rgba(220,38,38,1);">
-          Call 911 Emergency
-        </a>
+  <div class="azCard" style="margin-top:16px;">
+    <div class="azCardTitle">Site Contacts</div>
+    <div style="margin-top:12px;display:grid;grid-template-columns:1fr;gap:12px;">
+      <div style="padding:16px;background:rgba(2,6,23,.03);border-radius:12px;">
+        <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Site Manager</div>
+        <div class="muted" style="font-size:12px;margin-top:4px;">${escapeHtml(site.managerPhone)}</div>
       </div>
+      <div style="padding:16px;background:rgba(2,6,23,.03);border-radius:12px;">
+        <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Safety Officer</div>
+        <div class="muted" style="font-size:12px;margin-top:4px;">${escapeHtml(site.safetyPhone)}</div>
+      </div>
+      <div style="padding:16px;background:rgba(2,6,23,.03);border-radius:12px;">
+        <div style="font-weight:1000;font-size:13px;color:rgba(2,6,23,.85);">Supervisor</div>
+        <div class="muted" style="font-size:12px;margin-top:4px;">${escapeHtml(site.supervisorPhone)}</div>
+      </div>
+    </div>
+  </div>
 
-      <div class="azCard" style="margin-top:16px;">
-        <div class="azCardTitle">Submit Support Ticket</div>
-        <div class="muted" style="line-height:1.6;margin-top:12px;">
-          For non-urgent requests, submit a ticket and we'll respond within 24 business hours.
-        </div>
-        
-        <div style="margin-top:16px;">
-          <label style="font-size:12px;font-weight:900;color:rgba(2,6,23,.60);text-transform:uppercase;letter-spacing:0.5px;">Category</label>
-          <select id="t_cat" class="inp" style="margin-top:6px;margin-bottom:12px;">
-            <option>Payroll Question</option>
-            <option>Benefits Enrollment</option>
-            <option>Schedule Change</option>
-            <option>Safety Concern</option>
-            <option>Technical Issue</option>
-            <option>Other</option>
-          </select>
-          
-          <label style="font-size:12px;font-weight:900;color:rgba(2,6,23,.60);text-transform:uppercase;letter-spacing:0.5px;">Message</label>
-          <textarea id="t_msg" class="inp" rows="4" placeholder="Describe your question or concern..." style="margin-top:6px;"></textarea>
-          
-          <button class="btn primary" id="btnTicket" type="button" style="width:100%;margin-top:12px;border-radius:16px;padding:16px;">
-            Submit Ticket
-          </button>
-          
-          <div id="ticketMsg" class="small muted" style="margin-top:12px;text-align:center;"></div>
-        </div>
-      </div>
-    `
+  <div class="azCard" style="margin-top:16px;background:rgba(220,38,38,.04);border-color:rgba(220,38,38,.15);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="color:rgba(220,38,38,1);">${azIcon("alert")}</div>
+      <div class="azCardTitle" style="color:rgba(220,38,38,1);">Emergency</div>
+    </div>
+    <div class="muted" style="line-height:1.6;margin-bottom:16px;">
+      For life-threatening emergencies, call 911 immediately.<br>
+      For facility emergencies, contact Security at ${escapeHtml(site.safetyPhone)}
+    </div>
+    <a class="btn primary" href="tel:911" style="display:block;width:100%;text-align:center;border-radius:16px;background:rgba(220,38,38,1);">
+      Call 911 Emergency
+    </a>
+  </div>
+`
   );
-
-  const btn = document.getElementById("btnTicket");
-  if (btn && !btn.dataset.wired) {
-    btn.dataset.wired = "1";
-    btn.onclick = async () => {
-      try {
-        const msg = (document.getElementById("t_msg")?.value || "").trim();
-        const cat = (document.getElementById("t_cat")?.value || "Other").trim();
-        const out = document.getElementById("ticketMsg");
-
-        if (!msg) {
-          if (out) out.textContent = "Please enter a message.";
-          return;
-        }
-
-        if (!isFirebaseConfigured()) {
-          if (out) out.textContent = "Preview mode: ticket not sent.";
-          return;
-        }
-
-        await addDoc(TICKETS_COL(), {
-          employeeId: empId || "",
-          userUid: user?.uid || "",
-          userEmail: user?.email || "",
-          category: cat,
-          message: msg,
-          status: "open",
-          createdAt: serverTimestamp()
-        });
-
-        if (out) out.textContent = "Ticket submitted! HR will respond within 24 hours.";
-        uiToast("Ticket submitted successfully");
-        document.getElementById("t_msg").value = "";
-      } catch (e) {
-        uiToast(e?.message || String(e));
-      }
-    };
-  }
 }
 
-// ===============================
-// ROUTER
-// ===============================
-function renderRoute(userData, saveUserPatch, publicData, recordData, ctx) {
-  const sb = document.getElementById("stagebar");
-  if (sb) sb.innerHTML = "";
-
-  const r = routeName();
-
-  switch (r) {
-    case "home":              return renderHome(publicData, recordData, userData);
-    case "profile":           return renderProfile(userData, recordData);
-    case "chat":              return renderChat(userData, ctx?.empId);
-    case "schedule":          return renderMySchedule(recordData);
-    case "schedule-timecard": return renderTimecard(recordData);
-    case "schedule-findshifts": return renderFindShifts(recordData);
-    case "progress":          return renderProgress(userData, recordData);
-    case "shift":
-    case "shift_selection":   return renderShiftSelection(userData, saveUserPatch);
-    case "footwear":          return renderFootwear(userData, saveUserPatch, publicData);
-    case "i9":                return renderI9(userData, saveUserPatch);
-    case "photo_badge":       return renderPhotoBadge(userData);
-    case "w4":                return renderW4(userData);
-    case "firstday":
-    case "first_day":         return renderFirstDay(userData, recordData);
-    case "hours":             return renderHours(recordData);
-    case "payroll":           return renderPayroll(recordData);
-    case "timeoff":           return renderTimeOff(recordData);
-    case "deposit":           return renderDeposit(recordData);
-    case "notifications":     return renderNotifications(userData, recordData, publicData);
-    case "help":              return renderHelp(publicData, ctx?.empId, ctx?.user);
-    default:
-      location.hash = "#home";
-      return;
-  }
-}
-
-// ===============================
-// INIT
-// ===============================
-export async function initEmployeeApp() {
-  const badge = document.getElementById("userBadge");
-  const statusChip = document.getElementById("statusShift");
-  const adminBtn = document.getElementById("btnAdminGo");
-
+// Main init function
+export async function initEmployeePortal() {
   ensureChromeOnce();
-  setActiveTabsAndSidebar();
 
-  if (!isFirebaseConfigured()) {
-    uiSetText(badge, "Preview");
-    if (statusChip) uiSetText(statusChip, "offline");
-    if (adminBtn) adminBtn.style.display = "none";
+  let user = null;
+  let empId = null;
+  let publicData = defaultPublicContent();
+  let recordData = {};
+  let userData = {};
+  let unsubPublic = null;
+  let unsubRecord = null;
+  let unsubUser = null;
 
-    const demoUser = defaultUserDoc({ email: "preview@demo", displayName: "Preview User", uid: "preview" });
-    const demoPublic = defaultPublicContent();
+  const saveUserPatch = async (patch) => {
+    if (!isFirebaseConfigured() || !user) {
+      uiToast("Not connected. Changes saved locally only.");
+      return;
+    }
+    try {
+      const ref = doc(db, "users", user.uid);
+      await setDoc(ref, { ...patch, updatedAt: serverTimestamp() }, { merge: true });
+    } catch (e) {
+      uiToast("Error saving changes. Please try again.");
+      throw e;
+    }
+  };
 
-    const demoRecord = {
-      findShiftsText: "5 shifts available",
-      vtoText: "No VTO available",
-      filtersCount: 2,
-      lastClockedIn: "—",
-      maxHours: { max: 60, scheduledMinutes: 0 },
-      punchesToday: [],
-      scheduleEvents: [],
-      punches: [],
-      missedPunch: false,
-      availableShifts: [],
-      profile: {
-        fullName: "Preview User",
-        phone: "(555) 123-4567",
-        address: "123 Demo Street",
-        dateOfBirth: "01/01/1990",
-        emergencyContact: "Jane Doe (555) 987-6543"
-      }
-    };
-
-    const ctx = { empId: "PREVIEW", user: { uid: "preview", email: "preview@demo" } };
-
-    if (!location.hash) location.hash = "#home";
-
-    renderRoute(demoUser, async () => {}, demoPublic, demoRecord, ctx);
+  const renderRoute = () => {
+    const r = routeName();
     setActiveTabsAndSidebar();
 
-    window.addEventListener("hashchange", () => {
-      renderRoute(demoUser, async () => {}, demoPublic, demoRecord, ctx);
-      setActiveTabsAndSidebar();
-    });
+    switch (r) {
+      case "home":
+        renderHome(publicData, recordData, userData);
+        break;
+      case "profile":
+        renderProfile(userData, recordData);
+        break;
+      case "schedule":
+        renderMySchedule(recordData);
+        break;
+      case "schedule-timecard":
+        renderTimecard(recordData);
+        break;
+      case "schedule-findshifts":
+        renderFindShifts(recordData);
+        break;
+      case "payroll":
+        renderPayroll(userData);
+        break;
+      case "timeoff":
+      case "benefits":
+        renderTimeOff(userData);
+        break;
+      case "hours":
+        renderHours(userData);
+        break;
+      case "deposit":
+        renderDeposit(userData);
+        break;
+      case "progress":
+        renderProgress(userData, recordData);
+        break;
+      case "shift":
+        renderShiftSelection(userData, saveUserPatch);
+        break;
+      case "footwear":
+        renderFootwear(userData, saveUserPatch, publicData);
+        break;
+      case "i9":
+        renderI9(userData, saveUserPatch);
+        break;
+      case "photo_badge":
+        renderPhotoBadge(userData);
+        break;
+      case "firstday":
+        renderFirstDay(userData);
+        break;
+      case "w4":
+        renderW4(userData);
+        break;
+      case "chat":
+        renderChat(userData, empId);
+        break;
+      case "notifications":
+        renderNotifications(userData, publicData);
+        break;
+      case "help":
+        renderHelp(publicData);
+        break;
+      default:
+        renderHome(publicData, recordData, userData);
+    }
+  };
 
-    window.addEventListener("resize", () => {
-      applyChromeVisibility();
-      setActiveTabsAndSidebar();
-    });
+  onAuth(async (u) => {
+    user = u;
 
-    return;
-  }
+    if (!user) {
+      location.href = "/index.html";
+      return;
+    }
 
-  onAuth(async (user) => {
     try {
-      if (!user) { window.location.href = "./index.html"; return; }
+      await ensureUserDocExists(user);
+      empId = await ensureEmployeeId(user);
+    } catch (e) {
+      uiToast(e.message || "Error loading employee data");
+      console.error(e);
+    }
 
-      if (statusChip) {
-        uiSetText(statusChip, "online");
-        statusChip.classList.add("ok");
+    if (isFirebaseConfigured()) {
+      unsubPublic = onSnapshot(PUBLIC_DOC(), (snap) => {
+        publicData = snap.exists() ? snap.data() : defaultPublicContent();
+        renderRoute();
+      });
+
+      if (empId && empId !== "PREVIEW") {
+        unsubRecord = onSnapshot(RECORD_DOC(empId), (snap) => {
+          recordData = snap.exists() ? snap.data() : {};
+          renderRoute();
+        });
       }
 
-      const admin = await isAdminUser(user);
-      if (adminBtn) adminBtn.style.display = admin ? "" : "none";
-
-      await ensureUserDocExists(user);
-
-      const empId = await ensureEmployeeId(user);
-      uiSetText(badge, empId);
-
-      const userRef = doc(db, "users", user.uid);
-      const recordRef = RECORD_DOC(empId);
-      const publicRef = PUBLIC_DOC();
-
-      const saveUserPatch = async (patch) => {
-        await updateDoc(userRef, { ...patch, updatedAt: serverTimestamp() });
-      };
-
-      let currentUserData = null;
-      let currentPublicData = defaultPublicContent();
-      let currentRecordData = {};
-      const ctx = { empId, user };
-
-      const rerender = () => {
-        if (!currentUserData) return;
-        ensureChromeOnce();
-        applyChromeVisibility();
-        renderRoute(currentUserData, saveUserPatch, currentPublicData, currentRecordData, ctx);
-        setActiveTabsAndSidebar();
-      };
-
-      onSnapshot(publicRef, (snap) => {
-        currentPublicData = snap.exists()
-          ? { ...defaultPublicContent(), ...snap.data() }
-          : defaultPublicContent();
-        rerender();
+      unsubUser = onSnapshot(doc(db, "users", user.uid), (snap) => {
+        userData = snap.exists() ? snap.data() : {};
+        renderRoute();
       });
-
-      onSnapshot(recordRef, async (snap) => {
-        currentRecordData = snap.exists() ? (snap.data() || {}) : {};
-
-        try {
-          const u = await getDoc(userRef);
-          const ud = u.exists() ? u.data() : {};
-          const userHasAppt = !!(ud?.appointment && (ud.appointment.date || ud.appointment.time || ud.appointment.address));
-          const recAppt = currentRecordData?.appointment || null;
-          const recHasAppt = !!(recAppt && (recAppt.date || recAppt.time || recAppt.address));
-          if (!userHasAppt && recHasAppt) {
-            await setDoc(userRef, { appointment: recAppt, updatedAt: serverTimestamp() }, { merge: true });
-          }
-        } catch {}
-        rerender();
-      });
-
-      onSnapshot(userRef, (snap) => {
-        if (!snap.exists()) return;
-        const d = snap.data() || {};
-        const base = defaultUserDoc(user);
-
-        let mergedSteps = Array.isArray(d.steps) ? d.steps : [];
-        if (!Array.isArray(d.steps) || d.steps.length < base.steps.length) {
-          const old = Array.isArray(d.steps) ? d.steps : [];
-          mergedSteps = base.steps.map(s => {
-            const o = old.find(x => x.id === s.id);
-            return o ? { ...s, done: !!o.done, label: s.label } : s;
-          });
-        }
-
-        const fw = (d.footwear && typeof d.footwear === "object") ? d.footwear : {};
-        const footwearMerged = {
-          ack1: !!fw.ack1,
-          ack2: !!fw.ack2,
-          ack3: !!fw.ack3,
-          ack4: !!fw.ack4,
-          ack5: !!fw.ack5
-        };
-
-        currentUserData = {
-          ...base,
-          ...d,
-          uid: user.uid,
-          steps: mergedSteps,
-          appointment: (d.appointment && typeof d.appointment === "object") ? d.appointment : base.appointment,
-          shift: (d.shift && typeof d.shift === "object") ? d.shift : base.shift,
-          footwear: footwearMerged,
-          i9: (d.i9 && typeof d.i9 === "object") ? d.i9 : base.i9,
-          notifications: Array.isArray(d.notifications) ? d.notifications : base.notifications,
-          shiftChangeRequests: Array.isArray(d.shiftChangeRequests) ? d.shiftChangeRequests : []
-        };
-
-        if (!location.hash) location.hash = "#home";
-        rerender();
-      });
-
-      window.addEventListener("hashchange", rerender);
-      window.addEventListener("resize", () => {
-        applyChromeVisibility();
-        setActiveTabsAndSidebar();
-      });
-
-    } catch (e) {
-      console.error(e);
-      uiToast(e?.message || String(e));
     }
+
+    renderRoute();
   });
+
+  window.addEventListener("hashchange", renderRoute);
 }
