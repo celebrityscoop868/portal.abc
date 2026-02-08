@@ -233,7 +233,7 @@ export function uiEmptyState({
     ? `<a class="btn ghost" href="#${escapeHtml(ctaRoute)}" data-route="${escapeHtml(ctaRoute)}"
          style="margin-top:12px;width:100%;text-align:center;border-radius:16px;">
          ${escapeHtml(ctaLabel)}
-       </a>`
+        </a>`
     : "";
 
   return `
