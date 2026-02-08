@@ -35,39 +35,22 @@ async function ensureUserDoc(user) {
   const ref = doc(db, "users", user.uid);
   const snap = await getDoc(ref);
 
-  const baseData = {
+  const patch = {
     email: user.email || "",
     fullName: user.displayName || "",
-    role: "employee",
-    status: "active",
-    stage: "shift_selection",
-    createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-    lastLoginAt: serverTimestamp(),
-    steps: [
-      { id: "shift_selection", label: "Shift Selection", done: false },
-      { id: "footwear", label: "Safety Footwear", done: false },
-      { id: "i9", label: "I-9 Verification Ready", done: false },
-      { id: "photo_badge", label: "Photo Badge", done: false },
-      { id: "firstday", label: "First Day Preparation", done: false }
-    ],
-    appointment: {},
-    shift: {},
-    footwear: {},
-    i9: {},
-    notifications: []
+    lastLoginAt: serverTimestamp()
   };
 
   if (!snap.exists()) {
-    await setDoc(ref, baseData);
-  } else {
-    const existing = snap.data();
     await setDoc(ref, {
-      email: user.email || existing.email || "",
-      fullName: user.displayName || existing.fullName || "",
-      updatedAt: serverTimestamp(),
-      lastLoginAt: serverTimestamp()
+      ...patch,
+      role: "employee",
+      status: "active",
+      createdAt: serverTimestamp()
     }, { merge: true });
+  } else {
+    await setDoc(ref, patch, { merge: true });
   }
 }
 
@@ -104,11 +87,12 @@ export async function signInGoogle() {
     const code = e?.code || "";
     if (code === "auth/popup-blocked" || code === "auth/cancelled-popup-request") {
       throw new Error(
-        "Popup blocked. On iPhone: Settings > Safari > Block Pop-ups = OFF, then try again."
+        "Popup blocked. On iPhone: Settings > Safari > Block Pop-ups = OFF, then try again. " +
+        "Also make sure you tapped the button (not auto-redirect)."
       );
     }
     if (code === "auth/operation-not-supported-in-this-environment") {
-      throw new Error("Google sign-in not supported in this browser. Open in Safari/Chrome.");
+      throw new Error("Google sign-in not supported in this browser. Open in Safari/Chrome (not inside an app).");
     }
     throw e;
   }
