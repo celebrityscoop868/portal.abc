@@ -15,10 +15,10 @@ import {
   doc, getDoc, setDoc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-// ✅ ADMIN EMAILS WHITELIST
+// ✅ ADMIN EMAILS
 const ADMIN_EMAILS = ['sunpcorporation@gmail.com'];
 
-// ✅ ESTRUCTURA DE 5 PASOS (onboarding)
+// ✅ PASOS DEFAULT
 function createDefaultSteps() {
   return [
     { id: "shift_selection", label: "Shift Selection", done: false },
@@ -42,76 +42,69 @@ export function onAuth(cb) {
   }
 }
 
-// ✅ VERIFICAR SI ES ADMIN
+// ✅ VERIFICAR ADMIN
 export async function isAdminUser(user) {
   if (!user || !user.email) return false;
-  
-  if (!ADMIN_EMAILS.includes(user.email.toLowerCase())) {
-    return false;
-  }
-  
-  try {
-    const adminRef = doc(db, "admins", user.uid);
-    const adminSnap = await getDoc(adminRef);
-    return adminSnap.exists();
-  } catch (e) {
-    console.error("Error checking admin:", e);
-    return false;
-  }
+  return ADMIN_EMAILS.includes(user.email.toLowerCase());
 }
 
-// ✅ LOGIN EMAIL/PASSWORD (solo para admins)
+// ✅ LOGIN EMAIL (solo admin)
 export async function signInEmail(email, pass) {
-  if (!isFirebaseConfigured()) throw new Error("Firebase not configured yet.");
+  if (!isFirebaseConfigured()) throw new Error("Firebase not configured");
   
   await setPersistence(auth, browserLocalPersistence);
   const cred = await signInWithEmailAndPassword(auth, email, pass);
   
   const isAdmin = await isAdminUser(cred.user);
-  
-  if (isAdmin) {
-    const adminRef = doc(db, "admins", cred.user.uid);
-    await updateDoc(adminRef, { lastLoginAt: serverTimestamp() });
-    return { user: cred.user, role: 'admin' };
+  if (!isAdmin) {
+    throw new Error("Only admins can use email login");
   }
   
-  throw new Error("Invalid credentials. Only admins can use email login.");
+  return { user: cred.user, role: 'admin' };
 }
 
-// ✅ GOOGLE SIGN IN (para empleados)
+// ✅ GOOGLE SIGN IN - FLUJO CORREGIDO
 export async function signInGoogle() {
-  if (!isFirebaseConfigured()) throw new Error("Firebase not configured yet.");
+  if (!isFirebaseConfigured()) throw new Error("Firebase not configured");
   
   await setPersistence(auth, browserLocalPersistence);
   
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
   
+  // 1. Crear/autenticar usuario en Firebase Auth
   const cred = await signInWithPopup(auth, provider);
   const user = cred.user;
   
-  // ✅ Buscar por ID de documento (email)
+  // 2. Buscar si tiene ID pre-asignado en allowedEmployees (por email)
   const allowedRef = doc(db, "allowedEmployees", user.email.toLowerCase());
   const allowedSnap = await getDoc(allowedRef);
   
+  // 3. Si NO está en allowedEmployees → rechazar
   if (!allowedSnap.exists()) {
-    return { user, notAuthorized: true };
+    await signOut(auth); // Desloguear al usuario no autorizado
+    return { notAuthorized: true, email: user.email };
   }
   
   const allowedData = allowedSnap.data();
   
+  // 4. Si no está activo → rechazar
   if (allowedData.active !== true) {
-    return { user, notAuthorized: true };
+    await signOut(auth);
+    return { notAuthorized: true, email: user.email };
   }
   
+  // 5. Verificar si ya existe en users
   const userRef = doc(db, "users", user.uid);
   const userSnap = await getDoc(userRef);
   
+  // 6. Si ya existe y está verificado → login normal
   if (userSnap.exists() && userSnap.data()?.verified === true) {
     await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
     return { user, role: 'employee', verified: true };
   }
   
+  // 7. Primer login → necesita verificar ID
   return { 
     user, 
     role: 'employee', 
@@ -125,35 +118,24 @@ export async function verifyEmployeeId(user, inputEmpId) {
   if (!user) throw new Error("Not authenticated");
   
   const empId = inputEmpId.toString().toUpperCase().trim();
-  if (!empId.startsWith("SP")) {
-    throw new Error("Invalid ID format. Use format: SP001");
-  }
   
-  const allowedRef = doc(db, "allowedEmployees", empId);
+  // Verificar que el ID coincida con el asignado
+  const allowedRef = doc(db, "allowedEmployees", user.email.toLowerCase());
   const allowedSnap = await getDoc(allowedRef);
   
   if (!allowedSnap.exists()) {
-    throw new Error("Employee ID not found. Please check with HR.");
+    throw new Error("Email not registered");
   }
   
   const allowedData = allowedSnap.data();
   
-  if (allowedData.email?.toLowerCase() !== user.email?.toLowerCase()) {
-    throw new Error("This ID is assigned to a different email address.");
+  if (allowedData.employeeId !== empId) {
+    throw new Error("Incorrect Employee ID");
   }
   
-  if (allowedData.active !== true) {
-    throw new Error("This Employee ID is inactive. Contact HR.");
-  }
-  
-  if (allowedData.uid && allowedData.uid !== user.uid) {
-    throw new Error("This Employee ID is already linked to another account.");
-  }
-  
+  // Crear documento de usuario verificado
   const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
-  
-  const userData = {
+  await setDoc(userRef, {
     uid: user.uid,
     email: user.email.toLowerCase(),
     fullName: user.displayName || allowedData.name || "",
@@ -162,44 +144,25 @@ export async function verifyEmployeeId(user, inputEmpId) {
     status: "active",
     verified: true,
     verifiedAt: serverTimestamp(),
+    createdAt: serverTimestamp(),
     lastLoginAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
     currentStep: 0,
     onboardingComplete: false,
     steps: createDefaultSteps()
-  };
+  });
   
-  if (!userSnap.exists()) {
-    await setDoc(userRef, {
-      ...userData,
-      createdAt: serverTimestamp()
-    });
-  } else {
-    await updateDoc(userRef, userData);
-  }
-  
+  // Marcar como verificado en allowedEmployees
   await updateDoc(allowedRef, {
     status: "verified",
     verifiedAt: serverTimestamp(),
     uid: user.uid
   });
   
-  const recordRef = doc(db, "employeeRecords", empId);
-  const recordSnap = await getDoc(recordRef);
-  if (recordSnap.exists()) {
-    const recordData = recordSnap.data();
-    await updateDoc(userRef, {
-      steps: recordData.steps || userData.steps,
-      appointment: recordData.appointment || {},
-      shift: recordData.shift || {}
-    });
-  }
-  
   return { success: true, employeeId: empId };
 }
 
 export async function resetPassword(email) {
-  if (!isFirebaseConfigured()) throw new Error("Firebase not configured yet.");
+  if (!isFirebaseConfigured()) throw new Error("Firebase not configured");
   await sendPasswordResetEmail(auth, email);
 }
 
