@@ -1,21 +1,22 @@
-// SunPower Admin Portal - 100% FUNCIONAL
-import { db, isFirebaseConfigured } from "./firebase.js";
+// SunPower Admin Portal - Definitive Version
+import { auth, db, isFirebaseConfigured } from "./firebase.js";
 import { 
-    doc, getDoc, setDoc, updateDoc, deleteDoc,
-    collection, query, where, getDocs, onSnapshot,
-    serverTimestamp, arrayUnion, deleteField
+    doc, getDoc, setDoc, updateDoc, deleteDoc, 
+    collection, query, where, getDocs, onSnapshot, 
+    serverTimestamp, arrayUnion 
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
-// ==================== VARIABLES GLOBALES ====================
+// ==================== GLOBAL STATE ====================
 let currentEmpId = null;
 let chatUnsubscribe = null;
 
-// ==================== UTILIDADES ====================
+// ==================== UTILITIES ====================
 function $(id) { return document.getElementById(id); }
 
 function normalizeEmpId(input) {
     if (!input) return "";
-    let v = input.toString().toUpperCase().trim().replace(/[\s-_]/g, "");
+    let v = input.toString().toUpperCase().trim().replace(/[-_\s]/g, "");
     if (!v.startsWith("SP")) return "";
     const nums = v.slice(2);
     if (!/^\d+$/.test(nums)) return "";
@@ -41,7 +42,28 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// ==================== EMPLEADO ACTUAL ====================
+// ==================== AUTH CHECK ====================
+async function checkAdminAuth() {
+    const user = auth.currentUser;
+    if (!user) {
+        window.location.href = './index.html';
+        return false;
+    }
+    
+    // Verify admin status
+    const adminRef = doc(db, "admins", user.uid);
+    const adminSnap = await getDoc(adminRef);
+    
+    if (!adminSnap.exists()) {
+        showToast('Access denied: Admin only', 'error');
+        setTimeout(() => window.location.href = './index.html', 2000);
+        return false;
+    }
+    
+    return true;
+}
+
+// ==================== EMPLOYEE MANAGEMENT ====================
 async function loadCurrentEmployee() {
     const input = $('currentEmpId');
     const empId = normalizeEmpId(input?.value);
@@ -52,28 +74,33 @@ async function loadCurrentEmployee() {
     }
     
     try {
-        const empDoc = await getDoc(doc(db, "allowedEmployees", empId));
-        if (!empDoc.exists()) {
+        const allowedRef = doc(db, "allowedEmployees", empId);
+        const allowedSnap = await getDoc(allowedRef);
+        
+        if (!allowedSnap.exists()) {
             showToast(`Employee ${empId} not found`, 'error');
             return;
         }
         
         currentEmpId = empId;
         
+        // Update badge
         const badge = $('currentEmpBadge');
         if (badge) {
-            badge.textContent = `Working with: ${empId}`;
+            const data = allowedSnap.data();
+            badge.textContent = `${empId} - ${data.name || 'No name'}`;
             badge.classList.add('active');
         }
         
         input.value = empId;
         
-        await loadProfileData();
-        await loadAppointmentData();
-        await loadShiftData();
-        await initChat();
-        await loadNotifications();
-        await loadProgressData();
+        // Load all related data
+        await Promise.all([
+            loadOnboardingData(),
+            loadAppointmentData(),
+            loadShiftData(),
+            initChat()
+        ]);
         
         showToast(`Loaded ${empId} successfully!`, 'success');
         
@@ -83,100 +110,283 @@ async function loadCurrentEmployee() {
     }
 }
 
-// ==================== PERFIL ====================
-async function loadProfileData() {
-    if (!currentEmpId) return;
+async function createEmployee() {
+    const idInput = $('newEmpId');
+    const nameInput = $('newEmpName');
+    const emailInput = $('newEmpEmail');
     
-    try {
-        const snap = await getDoc(doc(db, "employeeRecords", currentEmpId));
-        const data = snap.exists() ? snap.data() : {};
-        const profile = data.profile || {};
-        
-        const fields = {
-            'profFirstName': profile.firstName || '',
-            'profLastName': profile.lastName || '',
-            'profDOB': profile.dob || '',
-            'profPhone': profile.phone || '',
-            'profAddress': profile.address || '',
-            'profCity': profile.city || '',
-            'profStateZip': profile.stateZip || '',
-            'profEmergencyName': profile.emergencyName || '',
-            'profEmergencyPhone': profile.emergencyPhone || ''
-        };
-        
-        Object.entries(fields).forEach(([id, value]) => {
-            const el = $(id);
-            if (el) el.value = value;
-        });
-        
-    } catch (error) {
-        console.error("Profile load error:", error);
+    const empId = normalizeEmpId(idInput?.value);
+    const name = nameInput?.value?.trim();
+    const email = emailInput?.value?.trim()?.toLowerCase();
+    
+    if (!empId) {
+        showToast('Invalid ID format. Use: SP001', 'error');
+        return;
     }
-}
-
-async function saveProfile() {
-    if (!currentEmpId) {
-        showToast('No employee selected', 'error');
+    if (!name) {
+        showToast('Full name is required', 'error');
+        return;
+    }
+    if (!email || !email.includes('@')) {
+        showToast('Valid email is required', 'error');
         return;
     }
     
-    const profile = {
-        firstName: $('profFirstName')?.value?.trim() || '',
-        lastName: $('profLastName')?.value?.trim() || '',
-        dob: $('profDOB')?.value || '',
-        phone: $('profPhone')?.value?.trim() || '',
-        address: $('profAddress')?.value?.trim() || '',
-        city: $('profCity')?.value?.trim() || '',
-        stateZip: $('profStateZip')?.value?.trim() || '',
-        emergencyName: $('profEmergencyName')?.value?.trim() || '',
-        emergencyPhone: $('profEmergencyPhone')?.value?.trim() || '',
-        updatedAt: serverTimestamp()
-    };
+    try {
+        // Check if ID exists
+        const existingId = await getDoc(doc(db, "allowedEmployees", empId));
+        if (existingId.exists()) {
+            showToast('Employee ID already exists', 'error');
+            return;
+        }
+        
+        // Check if email exists
+        const emailQuery = query(collection(db, "allowedEmployees"), where("email", "==", email));
+        const emailSnap = await getDocs(emailQuery);
+        if (!emailSnap.empty) {
+            showToast('Email already registered', 'error');
+            return;
+        }
+        
+        // Create allowedEmployees entry (this is what enables the employee to sign in)
+        await setDoc(doc(db, "allowedEmployees", empId), {
+            employeeId: empId,
+            name: name,
+            email: email,
+            active: true,
+            status: "pending", // pending → verified (when employee verifies)
+            createdAt: serverTimestamp(),
+            createdBy: auth.currentUser?.uid || 'admin'
+        });
+        
+        // Create employeeRecords for admin tracking
+        await setDoc(doc(db, "employeeRecords", empId), {
+            employeeId: empId,
+            name: name,
+            email: email,
+            createdAt: serverTimestamp(),
+            steps: [
+                { id: "shift_selection", label: "Shift Selection", done: false, locked: false },
+                { id: "footwear", label: "Safety Footwear", done: false, locked: true },
+                { id: "i9", label: "I-9 Verification Ready", done: false, locked: true },
+                { id: "photo_badge", label: "Photo Badge", done: false, locked: true },
+                { id: "firstday", label: "First Day Preparation", done: false, locked: true }
+            ],
+            currentStep: 0,
+            onboardingComplete: false,
+            appointment: {},
+            shift: {},
+            notifications: [],
+            chat: []
+        });
+        
+        // TODO: Send email to employee with their ID
+        // This would integrate with your email service
+        
+        showToast(`Employee ${empId} created! Tell them to sign in with Google using ${email}`, 'success');
+        
+        // Clear form
+        idInput.value = '';
+        nameInput.value = '';
+        emailInput.value = '';
+        
+        loadAllEmployees();
+        loadIdPool();
+        
+    } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+        console.error(error);
+    }
+}
+
+async function loadAllEmployees() {
+    const container = $('employeesList');
+    if (!container) return;
+    
+    container.innerHTML = '<div class="empty-state">Loading...</div>';
     
     try {
-        await updateDoc(doc(db, "employeeRecords", currentEmpId), { profile });
+        const snap = await getDocs(collection(db, "allowedEmployees"));
+        const employees = [];
         
-        await updateDoc(doc(db, "allowedEmployees", currentEmpId), {
-            name: `${profile.firstName} ${profile.lastName}`.trim(),
+        snap.forEach(doc => {
+            employees.push({ id: doc.id, ...doc.data() });
+        });
+        
+        employees.sort((a, b) => {
+            const numA = parseInt(a.id.replace('SP', '')) || 0;
+            const numB = parseInt(b.id.replace('SP', '')) || 0;
+            return numA - numB;
+        });
+        
+        if (employees.length === 0) {
+            container.innerHTML = '<div class="empty-state">No employees yet</div>';
+            return;
+        }
+        
+        container.innerHTML = '<div class="employee-list"></div>';
+        const list = container.querySelector('.employee-list');
+        
+        employees.forEach(emp => {
+            const item = document.createElement('div');
+            item.className = 'employee-item';
+            
+            const statusClass = emp.status === 'verified' ? 'status-verified' : 
+                               emp.active ? 'status-active' : 'status-inactive';
+            const statusText = emp.status === 'verified' ? 'Verified' : 
+                              emp.active ? 'Active' : 'Inactive';
+            
+            item.innerHTML = `
+                <div class="employee-info">
+                    <div class="employee-id">${emp.id}</div>
+                    <div class="employee-name">${emp.name || 'No name'}</div>
+                    ${emp.email ? `<div class="employee-email">${emp.email}</div>` : ''}
+                </div>
+                <div class="employee-actions">
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                    <button class="btn btn-secondary" onclick="window.loadEmp('${emp.id}')">Load</button>
+                    <button class="btn btn-danger" onclick="window.deleteEmp('${emp.id}')">Delete</button>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+        
+    } catch (error) {
+        container.innerHTML = `<div class="empty-state">Error: ${error.message}</div>`;
+    }
+}
+
+// ==================== ONBOARDING ====================
+async function loadOnboardingData() {
+    const container = $('onboardingStatus');
+    if (!container || !currentEmpId) {
+        if (container) container.innerHTML = '<div class="alert alert-warning">Load an employee to view progress</div>';
+        return;
+    }
+    
+    try {
+        const recordRef = doc(db, "employeeRecords", currentEmpId);
+        const recordSnap = await getDoc(recordRef);
+        
+        if (!recordSnap.exists()) {
+            container.innerHTML = '<div class="alert alert-warning">No onboarding data found</div>';
+            return;
+        }
+        
+        const data = recordSnap.data();
+        const steps = data.steps || [];
+        
+        let html = '<div class="step-list">';
+        steps.forEach((step, idx) => {
+            const isLocked = step.locked && !step.done;
+            html += `
+                <div class="step-item ${step.done ? 'completed' : ''}" style="${isLocked ? 'opacity: 0.5;' : ''}">
+                    <input type="checkbox" class="step-checkbox" 
+                           ${step.done ? 'checked' : ''} 
+                           ${isLocked ? 'disabled' : ''}
+                           onchange="window.toggleStep(${idx}, this.checked)">
+                    <div class="step-label">
+                        ${idx + 1}. ${step.label}
+                        ${isLocked ? ' 🔒' : ''}
+                    </div>
+                    <div class="step-status">${step.done ? '✓' : '○'}</div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        if (data.onboardingComplete) {
+            html = '<div class="alert alert-success" style="margin-bottom: 16px;">✅ Onboarding Complete!</div>' + html;
+        }
+        
+        container.innerHTML = html;
+        
+    } catch (error) {
+        container.innerHTML = `<div class="alert alert-error">Error loading data</div>`;
+    }
+}
+
+async function updateStep(stepIndex, done) {
+    if (!currentEmpId) return;
+    
+    try {
+        const recordRef = doc(db, "employeeRecords", currentEmpId);
+        const recordSnap = await getDoc(recordRef);
+        
+        if (!recordSnap.exists()) return;
+        
+        const data = recordSnap.data();
+        const steps = [...(data.steps || [])];
+        
+        if (stepIndex >= steps.length) return;
+        
+        // Update step
+        steps[stepIndex] = {
+            ...steps[stepIndex],
+            done: done,
+            completedAt: done ? serverTimestamp() : null
+        };
+        
+        // Unlock next step if completing current
+        if (done && stepIndex < steps.length - 1) {
+            steps[stepIndex + 1].locked = false;
+        }
+        
+        // Check if all complete
+        const allDone = steps.every(s => s.done);
+        
+        await updateDoc(recordRef, {
+            steps: steps,
+            currentStep: allDone ? steps.length : stepIndex + 1,
+            onboardingComplete: allDone,
             updatedAt: serverTimestamp()
         });
         
-        const usersQuery = query(collection(db, "users"), where("employeeId", "==", currentEmpId));
-        const usersSnap = await getDocs(usersQuery);
+        // Also update allowedEmployees
+        if (allDone) {
+            await updateDoc(doc(db, "allowedEmployees", currentEmpId), {
+                onboardingComplete: true,
+                updatedAt: serverTimestamp()
+            });
+        }
         
-        const promises = [];
-        usersSnap.forEach((userDoc) => {
-            promises.push(updateDoc(doc(db, "users", userDoc.id), {
-                fullName: `${profile.firstName} ${profile.lastName}`.trim()
-            }));
-        });
-        await Promise.all(promises);
-        
-        showToast('Profile saved!', 'success');
-        loadAllEmployees();
+        showToast(`Step ${done ? 'completed' : 'updated'}!`, 'success');
+        loadOnboardingData();
         
     } catch (error) {
         showToast(`Error: ${error.message}`, 'error');
     }
 }
 
-// ==================== CITA ====================
+async function manualStepUpdate() {
+    if (!currentEmpId) {
+        showToast('No employee selected', 'error');
+        return;
+    }
+    
+    const stepIndex = parseInt($('stepSelect')?.value || 0);
+    const action = $('stepAction')?.value;
+    
+    await updateStep(stepIndex, action === 'complete');
+}
+
+// ==================== APPOINTMENT ====================
 async function loadAppointmentData() {
     if (!currentEmpId) return;
     
     try {
-        const snap = await getDoc(doc(db, "employeeRecords", currentEmpId));
-        const data = snap.exists() ? snap.data() : {};
-        const appt = data.appointment || {};
+        const recordRef = doc(db, "employeeRecords", currentEmpId);
+        const recordSnap = await getDoc(recordRef);
+        const appt = recordSnap.exists() ? recordSnap.data().appointment || {} : {};
         
         if ($('apptDate')) $('apptDate').value = appt.date || '';
         if ($('apptTime')) $('apptTime').value = appt.time || '';
-        if ($('apptAddress')) $('apptAddress').value = appt.address || '';
+        if ($('apptLocation')) $('apptLocation').value = appt.location || '';
         if ($('apptNotes')) $('apptNotes').value = appt.notes || '';
         if ($('apptSuccess')) $('apptSuccess').style.display = 'none';
         
     } catch (error) {
-        console.error("Appointment load error:", error);
+        console.error("Error loading appointment:", error);
     }
 }
 
@@ -189,34 +399,26 @@ async function saveAppointment() {
     const appointment = {
         date: $('apptDate')?.value || '',
         time: $('apptTime')?.value || '',
-        address: $('apptAddress')?.value?.trim() || '',
+        location: $('apptLocation')?.value?.trim() || '',
         notes: $('apptNotes')?.value?.trim() || '',
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
+        updatedBy: auth.currentUser?.uid
     };
     
     try {
         await updateDoc(doc(db, "employeeRecords", currentEmpId), { appointment });
         
-        const usersQuery = query(collection(db, "users"), where("employeeId", "==", currentEmpId));
-        const usersSnap = await getDocs(usersQuery);
+        // Also update user's view if they exist
+        const userQuery = query(collection(db, "users"), where("employeeId", "==", currentEmpId));
+        const userSnap = await getDocs(userQuery);
         
-        if (usersSnap.empty) {
-            await setDoc(doc(db, "users", currentEmpId), {
-                employeeId: currentEmpId,
-                appointment,
-                createdAt: serverTimestamp()
-            });
-        } else {
-            const promises = [];
-            usersSnap.forEach((userDoc) => {
-                promises.push(updateDoc(doc(db, "users", userDoc.id), { appointment }));
-            });
-            await Promise.all(promises);
-        }
+        const promises = [];
+        userSnap.forEach((userDoc) => {
+            promises.push(updateDoc(doc(db, "users", userDoc.id), { appointment }));
+        });
+        await Promise.all(promises);
         
-        const successMsg = $('apptSuccess');
-        if (successMsg) successMsg.style.display = 'block';
-        
+        if ($('apptSuccess')) $('apptSuccess').style.display = 'block';
         showToast('Appointment saved!', 'success');
         
     } catch (error) {
@@ -225,57 +427,57 @@ async function saveAppointment() {
 }
 
 function clearAppointment() {
-    if ($('apptDate')) $('apptDate').value = '';
-    if ($('apptTime')) $('apptTime').value = '';
-    if ($('apptAddress')) $('apptAddress').value = '';
-    if ($('apptNotes')) $('apptNotes').value = '';
+    ['apptDate', 'apptTime', 'apptLocation', 'apptNotes'].forEach(id => {
+        const el = $(id);
+        if (el) el.value = '';
+    });
     if ($('apptSuccess')) $('apptSuccess').style.display = 'none';
 }
 
-// ==================== SHIFT APPROVAL ====================
+// ==================== SHIFT ====================
 async function loadShiftData() {
-    const pendingDiv = $('shiftPending');
-    const approvedDiv = $('shiftApproved');
-    const noneDiv = $('shiftNone');
-    
-    if (!currentEmpId) {
-        if (pendingDiv) pendingDiv.style.display = 'none';
-        if (approvedDiv) approvedDiv.style.display = 'none';
-        if (noneDiv) noneDiv.style.display = 'block';
+    const container = $('shiftStatus');
+    if (!container || !currentEmpId) {
+        if (container) container.innerHTML = '<div class="alert alert-warning">Load an employee to view shift status</div>';
         return;
     }
     
     try {
-        const snap = await getDoc(doc(db, "employeeRecords", currentEmpId));
-        const data = snap.exists() ? snap.data() : {};
-        const shift = data.shift || {};
+        const recordRef = doc(db, "employeeRecords", currentEmpId);
+        const recordSnap = await getDoc(recordRef);
+        const shift = recordSnap.exists() ? recordSnap.data().shift || {} : {};
         
         if (!shift.position) {
-            if (pendingDiv) pendingDiv.style.display = 'none';
-            if (approvedDiv) approvedDiv.style.display = 'none';
-            if (noneDiv) noneDiv.style.display = 'block';
+            container.innerHTML = `
+                <div class="alert alert-warning">
+                    ⚠️ Employee hasn't selected a shift yet
+                </div>
+            `;
             return;
         }
         
-        if ($('shiftPosition')) $('shiftPosition').textContent = shift.position || 'Not selected';
-        if ($('shiftTime')) $('shiftTime').textContent = shift.shift || 'Not selected';
-        if ($('shiftDate')) {
-            $('shiftDate').textContent = shift.selectedAt ? 
-                new Date(shift.selectedAt.toDate()).toLocaleDateString() : 'Unknown';
-        }
+        const statusClass = shift.approved ? 'alert-success' : 'alert-info';
+        const statusText = shift.approved ? '✅ Approved' : '⏳ Pending Approval';
         
-        if (shift.approved) {
-            if (pendingDiv) pendingDiv.style.display = 'none';
-            if (approvedDiv) approvedDiv.style.display = 'block';
-            if (noneDiv) noneDiv.style.display = 'none';
-        } else {
-            if (pendingDiv) pendingDiv.style.display = 'block';
-            if (approvedDiv) approvedDiv.style.display = 'none';
-            if (noneDiv) noneDiv.style.display = 'none';
-        }
+        container.innerHTML = `
+            <div class="alert ${statusClass}">
+                <div style="margin-bottom: 12px;"><strong>${statusText}</strong></div>
+                <div class="form-grid" style="margin-bottom: 16px;">
+                    <div><strong>Position:</strong> ${shift.position}</div>
+                    <div><strong>Shift:</strong> ${shift.shift}</div>
+                    <div><strong>Selected:</strong> ${shift.selectedAt?.toDate?.().toLocaleDateString() || 'Unknown'}</div>
+                </div>
+                ${!shift.approved ? `
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-success" onclick="window.approveShift()">✅ Approve</button>
+                        <button class="btn btn-danger" onclick="window.rejectShift()">❌ Reject</button>
+                    </div>
+                ` : ''}
+            </div>
+        `;
         
     } catch (error) {
-        console.error("Shift load error:", error);
+        container.innerHTML = '<div class="alert alert-error">Error loading shift data</div>';
     }
 }
 
@@ -286,19 +488,8 @@ async function approveShift() {
         await updateDoc(doc(db, "employeeRecords", currentEmpId), {
             'shift.approved': true,
             'shift.approvedAt': serverTimestamp(),
-            'shift.approvedBy': 'admin'
+            'shift.approvedBy': auth.currentUser?.uid
         });
-        
-        const usersQuery = query(collection(db, "users"), where("employeeId", "==", currentEmpId));
-        const usersSnap = await getDocs(usersQuery);
-        
-        const promises = [];
-        usersSnap.forEach((userDoc) => {
-            promises.push(updateDoc(doc(db, "users", userDoc.id), {
-                'shift.approved': true
-            }));
-        });
-        await Promise.all(promises);
         
         showToast('Shift approved!', 'success');
         loadShiftData();
@@ -313,9 +504,7 @@ async function rejectShift() {
     
     try {
         await updateDoc(doc(db, "employeeRecords", currentEmpId), {
-            'shift': deleteField(),
-            shiftRejected: true,
-            shiftRejectedAt: serverTimestamp()
+            shift: { rejected: true, rejectedAt: serverTimestamp() }
         });
         
         showToast('Shift rejected. Employee must select again.', 'info');
@@ -326,177 +515,18 @@ async function rejectShift() {
     }
 }
 
-// ==================== PROGRESO / STEPS ====================
-async function loadProgressData() {
-    if (!currentEmpId) return;
-    
-    try {
-        const snap = await getDoc(doc(db, "employeeRecords", currentEmpId));
-        const data = snap.exists() ? snap.data() : {};
-        const steps = data.steps || [];
-        
-        const container = $('progressSteps');
-        if (!container) return;
-        
-        if (steps.length === 0) {
-            container.innerHTML = '<div class="empty-state">No progress data available</div>';
-            return;
-        }
-        
-        container.innerHTML = steps.map(step => `
-            <div class="step-item ${step.done ? 'completed' : ''}" data-step-id="${step.id}">
-                <div class="step-checkbox">
-                    <input type="checkbox" ${step.done ? 'checked' : ''} 
-                           onchange="window.toggleStep('${step.id}', this.checked)">
-                </div>
-                <div class="step-label">${step.label}</div>
-                <div class="step-status">${step.done ? '✓' : '○'}</div>
-            </div>
-        `).join('');
-        
-    } catch (error) {
-        console.error("Progress load error:", error);
-    }
-}
-
-async function toggleStep(stepId, done) {
-    if (!currentEmpId) return;
-    
-    try {
-        const snap = await getDoc(doc(db, "employeeRecords", currentEmpId));
-        const data = snap.exists() ? snap.data() : {};
-        const steps = data.steps || [];
-        
-        const updatedSteps = steps.map(step => 
-            step.id === stepId ? { ...step, done } : step
-        );
-        
-        await updateDoc(doc(db, "employeeRecords", currentEmpId), {
-            steps: updatedSteps,
-            updatedAt: serverTimestamp()
-        });
-        
-        // Check if all steps completed
-        const allDone = updatedSteps.every(s => s.done);
-        if (allDone) {
-            await updateDoc(doc(db, "allowedEmployees", currentEmpId), {
-                onboardingComplete: true,
-                updatedAt: serverTimestamp()
-            });
-        }
-        
-        loadProgressData();
-        showToast(`Step ${done ? 'completed' : 'updated'}!`, 'success');
-        
-    } catch (error) {
-        showToast(`Error: ${error.message}`, 'error');
-    }
-}
-
-// ==================== NOTIFICACIONES ====================
-async function loadNotifications() {
-    if (!currentEmpId) return;
-    
-    try {
-        const snap = await getDoc(doc(db, "employeeRecords", currentEmpId));
-        const data = snap.exists() ? snap.data() : {};
-        const notifications = data.notifications || [];
-        
-        const container = $('notificationsList');
-        if (!container) return;
-        
-        if (notifications.length === 0) {
-            container.innerHTML = '<div class="empty-state">No notifications sent yet</div>';
-            return;
-        }
-        
-        // Sort by date desc
-        const sorted = notifications.sort((a, b) => {
-            const dateA = a.createdAt?.toDate?.() || 0;
-            const dateB = b.createdAt?.toDate?.() || 0;
-            return dateB - dateA;
-        });
-        
-        container.innerHTML = sorted.map(notif => `
-            <div class="notification-item ${notif.type} ${notif.read ? 'read' : 'unread'}">
-                <div class="notification-header">
-                    <span class="notification-type">${notif.type}</span>
-                    <span class="notification-date">${notif.createdAt?.toDate?.().toLocaleDateString() || 'Unknown'}</span>
-                </div>
-                <div class="notification-title">${notif.title}</div>
-                <div class="notification-body">${notif.body}</div>
-            </div>
-        `).join('');
-        
-    } catch (error) {
-        console.error("Notifications load error:", error);
-    }
-}
-
-async function sendNotification() {
-    if (!currentEmpId) {
-        showToast('No employee selected', 'error');
-        return;
-    }
-    
-    const title = $('notifTitle')?.value?.trim();
-    const body = $('notifBody')?.value?.trim();
-    const type = $('notifType')?.value || 'info';
-    
-    if (!title || !body) {
-        showToast('Title and message required', 'error');
-        return;
-    }
-    
-    const notification = {
-        id: generateId(),
-        type,
-        title,
-        body,
-        createdAt: serverTimestamp(),
-        read: false,
-        from: 'admin'
-    };
-    
-    try {
-        await updateDoc(doc(db, "employeeRecords", currentEmpId), {
-            notifications: arrayUnion(notification)
-        });
-        
-        const usersQuery = query(collection(db, "users"), where("employeeId", "==", currentEmpId));
-        const usersSnap = await getDocs(usersQuery);
-        
-        const promises = [];
-        usersSnap.forEach((userDoc) => {
-            promises.push(updateDoc(doc(db, "users", userDoc.id), {
-                notifications: arrayUnion(notification)
-            }));
-        });
-        await Promise.all(promises);
-        
-        if ($('notifTitle')) $('notifTitle').value = '';
-        if ($('notifBody')) $('notifBody').value = '';
-        
-        showToast('Notification sent!', 'success');
-        loadNotifications();
-        
-    } catch (error) {
-        showToast(`Error: ${error.message}`, 'error');
-    }
-}
-
 // ==================== CHAT ====================
 async function initChat() {
-    const chatHeader = $('chatHeader');
-    const chatMessages = $('chatMessages');
-    const chatInput = $('chatInput');
-    const btnSendChat = $('btnSendChat');
+    const header = $('chatHeader');
+    const messages = $('chatMessages');
+    const input = $('chatInput');
+    const btn = $('btnSendChat');
     
     if (!currentEmpId) {
-        if (chatHeader) chatHeader.textContent = 'Select an employee to start chatting';
-        if (chatMessages) chatMessages.innerHTML = '<div class="empty-state">Load an employee to view conversation</div>';
-        if (chatInput) chatInput.disabled = true;
-        if (btnSendChat) btnSendChat.disabled = true;
+        if (header) header.textContent = 'Select an employee to start chatting';
+        if (messages) messages.innerHTML = '<div class="empty-state">💬 Load an employee to view conversation</div>';
+        if (input) input.disabled = true;
+        if (btn) btn.disabled = true;
         return;
     }
     
@@ -506,19 +536,21 @@ async function initChat() {
     }
     
     try {
-        const empDoc = await getDoc(doc(db, "allowedEmployees", currentEmpId));
-        const empData = empDoc.exists() ? empDoc.data() : {};
+        const allowedRef = doc(db, "allowedEmployees", currentEmpId);
+        const allowedSnap = await getDoc(allowedRef);
+        const empData = allowedSnap.exists() ? allowedSnap.data() : {};
         
-        if (chatHeader) chatHeader.textContent = `Chat with: ${empData.name || currentEmpId}`;
-        if (chatInput) {
-            chatInput.disabled = false;
-            chatInput.focus();
+        if (header) header.textContent = `Chat with: ${empData.name || currentEmpId}`;
+        if (input) {
+            input.disabled = false;
+            input.focus();
         }
-        if (btnSendChat) btnSendChat.disabled = false;
+        if (btn) btn.disabled = false;
         
+        // Setup real-time listener
         chatUnsubscribe = onSnapshot(doc(db, "chats", currentEmpId), (snap) => {
-            const messages = snap.exists() ? (snap.data().messages || []) : [];
-            renderMessages(messages);
+            const data = snap.exists() ? snap.data() : {};
+            renderMessages(data.messages || []);
         });
         
     } catch (error) {
@@ -537,10 +569,8 @@ function renderMessages(messages) {
     
     container.innerHTML = messages.map(msg => `
         <div class="message ${msg.sender === 'admin' ? 'admin' : 'employee'}">
-            <div class="message-text">${msg.text}</div>
-            <div class="message-time">
-                ${msg.timestamp?.toDate?.().toLocaleTimeString() || ''}
-            </div>
+            <div>${msg.text}</div>
+            <div class="message-time">${msg.timestamp?.toDate?.().toLocaleString() || ''}</div>
         </div>
     `).join('');
     
@@ -555,7 +585,7 @@ async function sendChatMessage() {
     
     const message = {
         sender: 'admin',
-        text,
+        text: text,
         timestamp: serverTimestamp()
     };
     
@@ -584,145 +614,68 @@ async function sendChatMessage() {
     }
 }
 
-// ==================== GESTIÓN DE IDs ====================
-async function loadAllEmployees() {
-    const container = $('allEmployeesList');
-    if (!container) return;
+// ==================== ID POOL ====================
+async function loadIdPool() {
+    const grid = $('idPoolGrid');
+    const availableCount = $('availableCount');
+    const assignedCount = $('assignedCount');
+    const verifiedCount = $('verifiedCount');
     
-    container.innerHTML = '<div class="loading">Loading...</div>';
+    if (!grid) return;
     
     try {
         const snap = await getDocs(collection(db, "allowedEmployees"));
-        const employees = [];
         
-        snap.forEach(doc => {
-            employees.push({ id: doc.id, ...doc.data() });
-        });
+        let available = 0, assigned = 0, verified = 0;
         
-        employees.sort((a, b) => {
-            const numA = parseInt(a.id.replace('SP', '')) || 0;
-            const numB = parseInt(b.id.replace('SP', '')) || 0;
-            return numA - numB;
-        });
-        
-        if (employees.length === 0) {
-            container.innerHTML = '<div class="empty-state">No employees registered yet</div>';
-            return;
+        // Generate SP001-SP100 grid
+        let html = '';
+        for (let i = 1; i <= 100; i++) {
+            const id = 'SP' + i.toString().padStart(3, '0');
+            const doc = snap.docs.find(d => d.id === id);
+            const data = doc ? doc.data() : null;
+            
+            let statusClass = 'id-available';
+            let title = 'Available';
+            
+            if (data) {
+                if (data.status === 'verified') {
+                    statusClass = 'id-verified';
+                    title = `Verified: ${data.name}`;
+                    verified++;
+                } else if (data.assignedTo || data.email) {
+                    statusClass = 'id-assigned';
+                    title = `Assigned: ${data.name || 'Pending'}`;
+                    assigned++;
+                } else {
+                    available++;
+                }
+            } else {
+                available++;
+            }
+            
+            html += `<div class="id-item ${statusClass}" title="${title}">${id}</div>`;
         }
         
-        container.innerHTML = '<div class="employee-list"></div>';
-        const list = container.querySelector('.employee-list');
-        
-        employees.forEach(emp => {
-            const item = document.createElement('div');
-            item.className = 'employee-item';
-            
-            const isActive = emp.active !== false;
-            
-            item.innerHTML = `
-                <div class="employee-info">
-                    <div class="employee-id">${emp.id}</div>
-                    <div class="employee-name">${emp.name || 'No name'}</div>
-                    ${emp.email ? `<div class="employee-email">${emp.email}</div>` : ''}
-                </div>
-                <div class="employee-actions">
-                    <span class="status-badge ${isActive ? 'status-active' : 'status-inactive'}">
-                        ${isActive ? 'Active' : 'Inactive'}
-                    </span>
-                    <button class="btn btn-secondary" onclick="window.loadEmpFromList('${emp.id}')">
-                        Load
-                    </button>
-                    <button class="btn btn-danger" onclick="window.deleteEmployee('${emp.id}')">
-                        Delete
-                    </button>
-                </div>
-            `;
-            list.appendChild(item);
-        });
+        grid.innerHTML = html;
+        if (availableCount) availableCount.textContent = available;
+        if (assignedCount) assignedCount.textContent = assigned;
+        if (verifiedCount) verifiedCount.textContent = verified;
         
     } catch (error) {
-        container.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+        grid.innerHTML = '<div class="empty-state">Error loading ID pool</div>';
     }
 }
 
-async function addNewEmployee() {
-    const idInput = $('newEmpId');
-    const nameInput = $('newEmpName');
-    const emailInput = $('newEmpEmail');
-    
-    const empId = normalizeEmpId(idInput?.value);
-    const name = nameInput?.value?.trim();
-    const email = emailInput?.value?.trim();
-    
-    if (!empId) {
-        showToast('Invalid ID format. Use: SP001', 'error');
-        return;
-    }
-    
-    if (!name) {
-        showToast('Name is required', 'error');
-        return;
-    }
-    
-    try {
-        const existing = await getDoc(doc(db, "allowedEmployees", empId));
-        if (existing.exists()) {
-            showToast('Employee ID already exists', 'error');
-            return;
-        }
-        
-        await setDoc(doc(db, "allowedEmployees", empId), {
-            active: true,
-            name: name,
-            email: email || '',
-            createdAt: serverTimestamp(),
-            onboardingComplete: false
-        });
-        
-        await setDoc(doc(db, "employeeRecords", empId), {
-            employeeId: empId,
-            name: name,
-            email: email || '',
-            createdAt: serverTimestamp(),
-            profile: {},
-            appointment: {},
-            notifications: [],
-            shift: {},
-            steps: [
-                { id: "shift_selection", label: "Shift Selection", done: false },
-                { id: "footwear", label: "Safety Footwear", done: false },
-                { id: "i9", label: "I-9 Documents", done: false },
-                { id: "badge", label: "Photo Badge", done: false },
-                { id: "firstday", label: "First Day Preparation", done: false }
-            ]
-        });
-        
-        showToast(`Employee ${empId} created!`, 'success');
-        
-        if (idInput) idInput.value = '';
-        if (nameInput) nameInput.value = '';
-        if (emailInput) emailInput.value = '';
-        
-        loadAllEmployees();
-        
-    } catch (error) {
-        showToast(`Error: ${error.message}`, 'error');
-    }
-}
-
-// Funciones globales para onclick
-window.loadEmpFromList = async function(empId) {
+// ==================== GLOBAL FUNCTIONS ====================
+window.loadEmp = async function(empId) {
     const input = $('currentEmpId');
     if (input) input.value = empId;
-    
     await loadCurrentEmployee();
-    
-    const firstTab = document.querySelector('[data-tab="profile"]');
-    if (firstTab) firstTab.click();
 };
 
-window.deleteEmployee = async function(empId) {
-    if (!confirm(`Are you sure you want to delete ${empId}?`)) return;
+window.deleteEmp = async function(empId) {
+    if (!confirm(`Delete ${empId}? This cannot be undone.`)) return;
     
     try {
         await deleteDoc(doc(db, "allowedEmployees", empId));
@@ -733,69 +686,66 @@ window.deleteEmployee = async function(empId) {
             currentEmpId = null;
             const badge = $('currentEmpBadge');
             if (badge) {
-                badge.classList.remove('active');
                 badge.textContent = 'None selected';
+                badge.classList.remove('active');
             }
         }
         
         showToast(`Employee ${empId} deleted`, 'success');
         loadAllEmployees();
+        loadIdPool();
         
     } catch (error) {
         showToast(`Error: ${error.message}`, 'error');
     }
 };
 
-window.toggleStep = toggleStep;
+window.toggleStep = updateStep;
+window.approveShift = approveShift;
+window.rejectShift = rejectShift;
 
-// ==================== NAVEGACIÓN ====================
-function initTabs() {
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            const tabId = tab.dataset.tab;
-            
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            
-            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-            const section = $(`tab-${tabId}`);
-            if (section) section.classList.add('active');
-            
-            if (tabId === 'manage') loadAllEmployees();
-            if (tabId === 'shift') loadShiftData();
-            if (tabId === 'progress') loadProgressData();
-            if (tabId === 'notifications') loadNotifications();
-        });
-    });
-}
-
-// ==================== INICIALIZACIÓN ====================
-export function initAdminApp() {
+// ==================== INITIALIZATION ====================
+export async function initAdminApp() {
     console.log('🚀 Admin Portal Initializing...');
     
-    initTabs();
+    // Check auth first
+    const isAdmin = await checkAdminAuth();
+    if (!isAdmin) return;
     
+    // Event listeners
     $('btnLoadEmp')?.addEventListener('click', loadCurrentEmployee);
     $('currentEmpId')?.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') loadCurrentEmployee();
     });
     
-    $('btnSaveProfile')?.addEventListener('click', saveProfile);
+    $('btnCreateEmployee')?.addEventListener('click', createEmployee);
+    $('btnUpdateStep')?.addEventListener('click', manualStepUpdate);
     $('btnSaveAppt')?.addEventListener('click', saveAppointment);
     $('btnClearAppt')?.addEventListener('click', clearAppointment);
-    $('btnApproveShift')?.addEventListener('click', approveShift);
-    $('btnRejectShift')?.addEventListener('click', rejectShift);
-    $('btnSendNotif')?.addEventListener('click', sendNotification);
     $('btnSendChat')?.addEventListener('click', sendChatMessage);
     $('chatInput')?.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendChatMessage();
     });
-    $('btnAddEmp')?.addEventListener('click', addNewEmployee);
-    $('btnLogout')?.addEventListener('click', () => {
+    
+    $('btnLogout')?.addEventListener('click', async () => {
+        await signOut(auth);
         window.location.href = './index.html';
     });
     
+    // Tab-specific loaders
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabId = tab.dataset.tab;
+            if (tabId === 'employees') loadAllEmployees();
+            if (tabId === 'ids') loadIdPool();
+            if (tabId === 'onboarding') loadOnboardingData();
+            if (tabId === 'shift') loadShiftData();
+        });
+    });
+    
+    // Initial loads
     loadAllEmployees();
+    loadIdPool();
     
     console.log('✅ Admin Portal Ready');
 }
