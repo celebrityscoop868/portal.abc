@@ -195,8 +195,10 @@
             font-size: 12px; 
             font-weight: 700;
         }
+        .status-pending { background: #fef3c7; color: #92400e; }
         .status-active { background: #dcfce7; color: #166534; }
-        .status-inactive { background: #fee2e2; color: #991b1b; }
+        .status-suspended { background: #fee2e2; color: #991b1b; }
+        .status-unassigned { background: #e5e7eb; color: #6b7280; }
         
         /* Chat */
         .chat-container { 
@@ -300,6 +302,7 @@
         }
         .alert-warning { background: #fef3c7; color: #92400e; }
         .alert-success { background: #dcfce7; color: #166534; }
+        .alert-info { background: #dbeafe; color: #1e40af; }
         
         /* Disabled overlay */
         .disabled-overlay {
@@ -318,6 +321,31 @@
             padding: 12px 24px;
             border-radius: 8px;
             font-weight: 700;
+        }
+        
+        /* ID Pool Section */
+        .id-pool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .id-pool-item {
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .id-available {
+            background: #dcfce7;
+            color: #166534;
+            border: 2px solid #22c55e;
+        }
+        .id-assigned {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #ef4444;
         }
         
         @media (max-width: 768px) {
@@ -357,7 +385,8 @@
     <div class="container">
         <!-- Tabs -->
         <div class="tabs">
-            <button class="tab active" data-tab="profile">👤 Profile</button>
+            <button class="tab active" data-tab="users">👥 Users</button>
+            <button class="tab" data-tab="onboarding">📋 Onboarding</button>
             <button class="tab" data-tab="appointment">📅 Appointment</button>
             <button class="tab" data-tab="shift">🕐 Shift Approval</button>
             <button class="tab" data-tab="notifications">🔔 Notifications</button>
@@ -365,56 +394,71 @@
             <button class="tab" data-tab="manage">⚙️ Manage IDs</button>
         </div>
 
-        <!-- Profile Section -->
-        <div id="tab-profile" class="content-section active">
+        <!-- Users Section (NUEVO) -->
+        <div id="tab-users" class="content-section active">
             <div class="card">
-                <div class="card-title">Personal Information</div>
+                <div class="card-title">Create New Employee Account</div>
+                <div class="alert alert-info">
+                    <strong>Important:</strong> Create accounts only for approved applicants. The employee will receive login credentials via email.
+                </div>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label class="form-label">First Name</label>
-                        <input type="text" class="form-input" id="profFirstName">
+                        <label class="form-label">Employee Email *</label>
+                        <input type="email" class="form-input" id="newUserEmail" placeholder="employee@email.com">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Last Name</label>
-                        <input type="text" class="form-input" id="profLastName">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" class="form-input" id="newUserName" placeholder="John Smith">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Date of Birth</label>
-                        <input type="date" class="form-input" id="profDOB">
+                        <label class="form-label">Temporary Password *</label>
+                        <input type="text" class="form-input" id="newUserPassword" placeholder="TempPass123!">
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Phone</label>
-                        <input type="tel" class="form-input" id="profPhone">
-                    </div>
-                    <div class="form-group" style="grid-column: span 2;">
-                        <label class="form-label">Address</label>
-                        <input type="text" class="form-input" id="profAddress">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">City</label>
-                        <input type="text" class="form-input" id="profCity">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">State / ZIP</label>
-                        <input type="text" class="form-input" id="profStateZip">
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <button class="btn btn-success" id="btnCreateUser" style="width: 100%;">➕ Create Account</button>
                     </div>
                 </div>
             </div>
             
             <div class="card">
-                <div class="card-title">Emergency Contact</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label">Contact Name</label>
-                        <input type="text" class="form-input" id="profEmergencyName">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Contact Phone</label>
-                        <input type="tel" class="form-input" id="profEmergencyPhone">
+                <div class="card-title">All Employee Accounts</div>
+                <div id="allUsersList">
+                    <div style="text-align: center; color: #6b7280; padding: 40px;">
+                        Loading users...
                     </div>
                 </div>
-                <div style="margin-top: 20px;">
-                    <button class="btn btn-primary" id="btnSaveProfile">💾 Save Profile</button>
+            </div>
+        </div>
+
+        <!-- Onboarding Section (NUEVO) -->
+        <div id="tab-onboarding" class="content-section">
+            <div class="card">
+                <div class="card-title">Employee Onboarding Progress</div>
+                <div id="onboardingStatus">
+                    <div class="alert alert-warning">
+                        Load an employee to view their onboarding progress.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">Reset Onboarding Step</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Step to Reset</label>
+                        <select class="form-select" id="resetStepSelect">
+                            <option value="1">1. Documents</option>
+                            <option value="2">2. I-9 Verification</option>
+                            <option value="3">3. PPE Acknowledgment</option>
+                            <option value="4">4. Safety Store</option>
+                            <option value="5">5. Shift Selection</option>
+                            <option value="6">6. Photo Badge</option>
+                            <option value="7">7. First Day</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <button class="btn btn-danger" id="btnResetStep" style="width: 100%;">🔄 Reset Step</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -537,31 +581,33 @@
         <!-- Manage IDs Section -->
         <div id="tab-manage" class="content-section">
             <div class="card">
-                <div class="card-title">Add New Employee ID</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label">Employee ID (SP###)</label>
-                        <input type="text" class="form-input" id="newEmpId" placeholder="SP001" style="text-transform: uppercase;">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" class="form-input" id="newEmpName" placeholder="John Smith">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Email (optional)</label>
-                        <input type="email" class="form-input" id="newEmpEmail" placeholder="john@email.com">
-                    </div>
-                    <div class="form-group" style="display: flex; align-items: flex-end;">
-                        <button class="btn btn-success" id="btnAddEmp" style="width: 100%;">➕ Add Employee</button>
-                    </div>
+                <div class="card-title">ID Pool Management (SP-700 to SP-799)</div>
+                <div class="alert alert-info">
+                    <strong>Available IDs:</strong> <span id="availableCount">0</span> | 
+                    <strong>Assigned:</strong> <span id="assignedCount">0</span>
+                </div>
+                <div class="id-pool-grid" id="idPoolGrid">
+                    <!-- IDs se cargan dinámicamente -->
                 </div>
             </div>
             
             <div class="card">
-                <div class="card-title">All Registered Employees</div>
-                <div id="allEmployeesList">
-                    <div style="text-align: center; color: #6b7280; padding: 40px;">
-                        Loading employees...
+                <div class="card-title">Assign ID to Employee</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Select Employee</label>
+                        <select class="form-select" id="assignEmployeeSelect">
+                            <option value="">-- Select employee --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Select Available ID</label>
+                        <select class="form-select" id="assignIdSelect">
+                            <option value="">-- Select ID --</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <button class="btn btn-success" id="btnAssignId" style="width: 100%;">🔗 Assign ID</button>
                     </div>
                 </div>
             </div>
@@ -593,4 +639,3 @@
     </script>
 </body>
 </html>
-
