@@ -112,74 +112,146 @@ border-radius:12px;
 box-shadow:0 12px 28px rgba(0,0,0,.12);
 " role="main">
 
-    <h2 style="margin:0 0 8px;font-size:20px;color:#0d47a1;">Log in to SunPower</h2>
+    <!-- SCREEN: Login Form -->
+    <div id="loginScreen">
+        <h2 style="margin:0 0 8px;font-size:20px;color:#0d47a1;">Log in to SunPower</h2>
 
-    <p style="margin:0 0 18px;color:#555;font-size:14px;line-height:1.5;">
-        Access your schedule, payroll, onboarding and more by securely signing in to your SunPower employee account.
-    </p>
+        <p style="margin:0 0 18px;color:#555;font-size:14px;line-height:1.5;">
+            Access your schedule, payroll, onboarding and more by securely signing in to your SunPower employee account.
+        </p>
 
-    <!-- Login Form -->
-    <form onsubmit="return false;" aria-label="Login Form">
-        <label for="email" style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:6px;">EMAIL</label>
-        <input 
-            id="email" 
-            type="email" 
-            placeholder="Enter your company email"
-            autocomplete="email"
-            required
-            aria-required="true"
-            aria-describedby="email-help"
+        <!-- Google Sign In Button -->
+        <button 
+            id="btnGoogle" 
+            type="button"
             style="
             width:100%;
             padding:14px;
-            margin-bottom:14px;
+            background:white;
+            color:#444;
             border:1px solid #cfd8dc;
             border-radius:6px;
-            font-size:15px;
+            font-size:16px;
+            font-weight:600;
+            cursor:pointer;
+            margin-bottom:12px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:10px;
             "
-        />
-        <div id="email-help" class="sr-only">Enter your registered company email address</div>
+        >
+            <svg style="width:18px;height:18px;" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Sign in with Google
+        </button>
 
-        <label for="pass" style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:6px;">PASSWORD</label>
-        <input 
-            id="pass" 
-            type="password" 
-            placeholder="Enter your password"
-            autocomplete="current-password"
-            required
-            aria-required="true"
-            aria-describedby="pass-help"
-            style="
-            width:100%;
-            padding:14px;
-            margin-bottom:10px;
-            border:1px solid #cfd8dc;
-            border-radius:6px;
-            font-size:15px;
-            "
-        />
-        <div id="pass-help" class="sr-only">Enter your secure password</div>
+        <!-- Email/Password Login -->
+        <div style="margin-top:16px;">
+            <label for="email" style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:6px;">EMAIL</label>
+            <input 
+                id="email" 
+                type="email" 
+                placeholder="Enter your email"
+                autocomplete="email"
+                style="
+                width:100%;
+                padding:14px;
+                margin-bottom:14px;
+                border:1px solid #cfd8dc;
+                border-radius:6px;
+                font-size:15px;
+                "
+            />
 
-        <!-- Show Password Toggle -->
-        <div style="margin:10px 0 18px;">
-            <label style="font-size:13px;color:#444;display:flex;align-items:center;gap:8px;cursor:pointer;">
-                <input 
-                    type="checkbox" 
-                    onclick="
-                    const p=document.getElementById('pass');
-                    p.type=p.type==='password'?'text':'password';
-                    this.setAttribute('aria-label', p.type==='password'?'Show password':'Hide password');
-                    "
-                    aria-label="Show password"
-                    style="width:16px;height:16px;cursor:pointer;"
-                > 
-                Show password
-            </label>
+            <label for="pass" style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:6px;">PASSWORD</label>
+            <input 
+                id="pass" 
+                type="password" 
+                placeholder="Enter your password"
+                autocomplete="current-password"
+                style="
+                width:100%;
+                padding:14px;
+                margin-bottom:10px;
+                border:1px solid #cfd8dc;
+                border-radius:6px;
+                font-size:15px;
+                "
+            />
+
+            <!-- Show Password Toggle -->
+            <div style="margin:10px 0 18px;">
+                <label style="font-size:13px;color:#444;display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input 
+                        type="checkbox" 
+                        id="showPass"
+                        style="width:16px;height:16px;cursor:pointer;"
+                    > 
+                    Show password
+                </label>
+            </div>
+
+            <button 
+                id="btnLogin" 
+                type="button"
+                style="
+                width:100%;
+                padding:14px;
+                background:#1565c0;
+                color:white;
+                border:none;
+                border-radius:6px;
+                font-size:16px;
+                font-weight:700;
+                cursor:pointer;
+                "
+            >
+                Log in
+            </button>
         </div>
 
-        <!-- Login Button -->
+        <!-- Forgot Password -->
+        <div style="text-align:center;margin-top:14px;">
+            <button 
+                id="btnReset" 
+                type="button"
+                style="
+                background:none;
+                border:none;
+                color:#1565c0;
+                font-size:14px;
+                cursor:pointer;
+                text-decoration:underline;
+                padding:8px;
+                "
+            >
+                Forgot your password?
+            </button>
+        </div>
+    </div>
+
+    <!-- SCREEN: Verification (Employee ID) -->
+    <div id="verifyScreen" style="display:none;">
+        <h2 style="margin:0 0 8px;font-size:20px;color:#0d47a1;">Verify Your Account</h2>
+        <p style="margin:0 0 18px;color:#555;font-size:14px;line-height:1.5;">
+            Welcome! Please enter your Employee ID to complete your account setup. This ID was provided to you by HR.
+        </p>
+
+        <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:6px;">EMPLOYEE ID</label>
+        <input 
+            id="verifyEmpId" 
+            type="text" 
+            placeholder="SP001"
+            style="text-transform:uppercase;width:100%;padding:14px;margin-bottom:14px;border:1px solid #cfd8dc;border-radius:6px;font-size:15px;"
+        />
+
         <button 
-            id="btnLogin" 
+            id="btnVerify" 
             type="button"
             style="
             width:100%;
@@ -192,29 +264,58 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
             font-weight:700;
             cursor:pointer;
             "
-            aria-label="Log in to your account"
         >
-            Log in
+            Verify & Continue
         </button>
-    </form>
 
-    <!-- Forgot Password -->
-    <div style="text-align:center;margin-top:14px;">
+        <div style="text-align:center;margin-top:16px;">
+            <button 
+                id="btnBackToLogin" 
+                type="button"
+                style="
+                background:none;
+                border:none;
+                color:#1565c0;
+                font-size:14px;
+                cursor:pointer;
+                text-decoration:underline;
+                "
+            >
+                Back to Login
+            </button>
+        </div>
+    </div>
+
+    <!-- SCREEN: Not Authorized -->
+    <div id="notAuthScreen" style="display:none;">
+        <h2 style="margin:0 0 8px;font-size:20px;color:#c62828;">Account Not Found</h2>
+        <p style="margin:0 0 18px;color:#555;font-size:14px;line-height:1.5;">
+            Your email is not registered in our system.<br>
+            Please contact HR to get your Employee ID and account setup.
+        </p>
+        
+        <div style="padding:16px;background:#fff3cd;border-radius:8px;margin-bottom:18px;">
+            <strong>HR Contact:</strong><br>
+            Email: hr@sunpowerc.energy<br>
+            Phone: (800) 876-4321
+        </div>
+        
         <button 
-            id="btnReset" 
+            id="btnTryAgain" 
             type="button"
             style="
-            background:none;
+            width:100%;
+            padding:14px;
+            background:#1565c0;
+            color:white;
             border:none;
-            color:#1565c0;
-            font-size:14px;
+            border-radius:6px;
+            font-size:16px;
+            font-weight:700;
             cursor:pointer;
-            text-decoration:underline;
-            padding:8px;
             "
-            aria-label="Reset your password"
         >
-            Forgot your password?
+            Try Again
         </button>
     </div>
 
@@ -222,7 +323,7 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
     <div style="margin-top:24px;padding:16px;background:#f3f4f6;border-radius:8px;text-align:center;">
         <p style="margin:0;font-size:13px;color:#6b7280;">
             <strong>New employee?</strong><br>
-            Your account will be created by HR. Contact your supervisor for login credentials.
+            Your account will be created by HR. Contact your supervisor for your Employee ID.
         </p>
     </div>
 
@@ -254,86 +355,179 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
     import {
         authReady,
         signInEmail,
-        resetPassword,
-        getRedirectRoute
+        signInGoogle,
+        verifyEmployeeId,
+        isAdminUser
     } from "./assets/auth.js";
 
     const yearEl = document.getElementById("year");
     const msg = document.getElementById("msg");
-    const emailEl = document.getElementById("email");
-    const passEl = document.getElementById("pass");
-
-    const btnLogin = document.getElementById("btnLogin");
-    const btnReset = document.getElementById("btnReset");
+    const loginScreen = document.getElementById("loginScreen");
+    const verifyScreen = document.getElementById("verifyScreen");
+    const notAuthScreen = document.getElementById("notAuthScreen");
 
     yearEl.textContent = new Date().getFullYear();
+
+    function showScreen(screen) {
+        loginScreen.style.display = 'none';
+        verifyScreen.style.display = 'none';
+        notAuthScreen.style.display = 'none';
+        if (screen) screen.style.display = 'block';
+        uiSetText(msg, "");
+    }
 
     function showErr(e) { 
         uiSetText(msg, e?.message || String(e)); 
     }
     
     function setBusy(b) {
-        btnLogin.disabled = b;
-        btnReset.disabled = b;
-        btnLogin.textContent = b ? "Signing in..." : "Log in";
-        btnLogin.style.opacity = b ? "0.7" : "1";
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(btn => btn.disabled = b);
     }
 
-    async function doLogin() {
+    // Show/hide password
+    document.getElementById("showPass").onchange = function() {
+        const pass = document.getElementById("pass");
+        pass.type = this.checked ? "text" : "password";
+    };
+
+    // Google Sign In
+    document.getElementById("btnGoogle").onclick = async () => {
         uiSetText(msg, "");
         setBusy(true);
         try {
-            const email = emailEl.value.trim();
-            const pass = passEl.value.trim();
+            const result = await signInGoogle();
+            
+            // Check if admin
+            const isAdmin = await isAdminUser(result.user);
+            if (isAdmin) {
+                window.location.href = './admin.html';
+                return;
+            }
+            
+            if (result.notAuthorized) {
+                showScreen(notAuthScreen);
+                setBusy(false);
+                return;
+            }
+            
+            if (result.needsVerification) {
+                showScreen(verifyScreen);
+                window.pendingUser = result.user;
+                setBusy(false);
+                return;
+            }
+            
+            // Already verified employee
+            window.location.href = './employee.html#progress';
+            
+        } catch (e) {
+            showErr(e);
+            setBusy(false);
+        }
+    };
+
+    // Email Login
+    document.getElementById("btnLogin").onclick = async () => {
+        uiSetText(msg, "");
+        setBusy(true);
+        try {
+            const email = document.getElementById("email").value.trim();
+            const pass = document.getElementById("pass").value.trim();
             if (!email || !pass) throw new Error("Enter email and password.");
             
             const result = await signInEmail(email, pass);
-            const redirectUrl = await getRedirectRoute(result.user);
             
-            window.location.href = redirectUrl;
+            // Check if admin
+            const isAdmin = await isAdminUser(result.user);
+            if (isAdmin) {
+                window.location.href = './admin.html';
+            } else {
+                // Employee with email login (should be rare)
+                window.location.href = './employee.html#progress';
+            }
             
         } catch (e) {
             showErr(e);
             setBusy(false);
         }
-    }
+    };
 
-    async function doReset() {
-        uiSetText(msg, "");
+    // Verify Employee ID
+    document.getElementById("btnVerify").onclick = async () => {
+        const empId = document.getElementById("verifyEmpId").value.trim().toUpperCase();
+        
+        if (!empId) {
+            showErr("Please enter your Employee ID");
+            return;
+        }
+        
         setBusy(true);
         try {
-            const email = emailEl.value.trim();
-            if (!email) throw new Error("Please enter your email address first.");
-            await resetPassword(email);
-            uiToast("Password reset email sent. Check your inbox.");
-            setBusy(false);
+            const result = await verifyEmployeeId(window.pendingUser, empId);
+            
+            if (result.success) {
+                uiToast("Account verified! Welcome to SunPower.");
+                window.location.href = './employee.html#progress';
+            }
         } catch (e) {
             showErr(e);
             setBusy(false);
         }
-    }
+    };
 
-    // Event Listeners
-    btnLogin.onclick = doLogin;
-    btnReset.onclick = doReset;
+    // Back buttons
+    document.getElementById("btnBackToLogin").onclick = () => {
+        showScreen(loginScreen);
+        setBusy(false);
+    };
+    document.getElementById("btnTryAgain").onclick = () => {
+        showScreen(loginScreen);
+        setBusy(false);
+    };
+
+    // Password reset
+    document.getElementById("btnReset").onclick = async () => {
+        uiSetText(msg, "");
+        const email = prompt("Enter your email for password reset:");
+        if (!email) return;
+        
+        setBusy(true);
+        try {
+            const { sendPasswordResetEmail } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
+            const { auth } = await import("./assets/firebase.js");
+            await sendPasswordResetEmail(auth, email);
+            uiToast("Password reset email sent!");
+        } catch (e) {
+            showErr(e);
+        }
+        setBusy(false);
+    };
 
     // Enter key support
-    passEl.addEventListener("keydown", e => {
+    document.getElementById("pass").addEventListener("keydown", e => {
         if (e.key === "Enter") {
             e.preventDefault();
-            doLogin();
+            document.getElementById("btnLogin").click();
         }
     });
     
-    emailEl.addEventListener("keydown", e => {
+    document.getElementById("email").addEventListener("keydown", e => {
         if (e.key === "Enter") {
             e.preventDefault();
-            passEl.focus();
+            document.getElementById("pass").focus();
+        }
+    });
+
+    document.getElementById("verifyEmpId").addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            document.getElementById("btnVerify").click();
         }
     });
 
     // Focus email on load
-    if (emailEl) emailEl.focus();
+    document.getElementById("email")?.focus();
 </script>
 
 </body>
