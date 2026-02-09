@@ -1,167 +1,233 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>Employee Portal</title>
-  <link rel="stylesheet" href="./assets/app.css?v=20260205-1"/>
-<base target="_blank">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SunPower Employee Portal</title>
+  <link rel="stylesheet" href="./assets/app.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f3f4f6; }
+    
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; height: 56px;
+      background: #fff; border-bottom: 1px solid #e5e7eb;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; z-index: 100;
+    }
+    .brand-mini { display: flex; align-items: center; gap: 10px; }
+    .brand-dot { width: 8px; height: 8px; background: #f59e0b; border-radius: 50%; }
+    .brand-title { font-weight: 700; font-size: 16px; color: #111827; }
+    .topbar-pill {
+      padding: 6px 12px; background: #f3f4f6; border-radius: 999px;
+      font-size: 13px; font-weight: 600; color: #374151;
+    }
+    .topbar-right { display: flex; gap: 8px; align-items: center; }
+    
+    .sidebar {
+      position: fixed; top: 56px; left: 0; bottom: 0; width: 240px;
+      background: #fff; border-right: 1px solid #e5e7eb;
+      display: flex; flex-direction: column; z-index: 90;
+    }
+    .nav { flex: 1; overflow-y: auto; padding: 16px; }
+    .nav-item {
+      display: block; padding: 10px 12px; border-radius: 8px;
+      color: #6b7280; text-decoration: none; font-size: 14px;
+      font-weight: 500; margin-bottom: 4px;
+    }
+    .nav-item:hover { background: #f3f4f6; color: #111827; }
+    .nav-item.active { background: #dbeafe; color: #1d4ed8; }
+    .sidebar-foot {
+      padding: 16px; border-top: 1px solid #e5e7eb;
+    }
+    .status-chip {
+      display: inline-block; padding: 4px 10px; border-radius: 999px;
+      font-size: 12px; font-weight: 600; background: #fee2e2; color: #991b1b;
+    }
+    .status-chip.ok { background: #d1fae5; color: #065f46; }
+    
+    .content {
+      margin-left: 240px; margin-top: 56px; padding: 24px;
+      min-height: calc(100vh - 56px);
+    }
+    .page-head { margin-bottom: 24px; }
+    .page-head h1 { font-size: 24px; font-weight: 700; color: #111827; margin-bottom: 8px; }
+    .subhead { color: #6b7280; font-size: 14px; }
+    
+    .footer {
+      margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb;
+      font-size: 12px; color: #9ca3af; text-align: center;
+    }
+    
+    /* Mobile bottom nav */
+    .bottom-nav {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      height: 64px; background: #fff; border-top: 1px solid #e5e7eb;
+      z-index: 1000;
+    }
+    .bn-wrap {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      height: 100%; align-items: center;
+    }
+    .bn-item {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 4px; color: #6b7280;
+      text-decoration: none; font-size: 11px; font-weight: 500;
+    }
+    .bn-item.active { color: #1d4ed8; }
+    .bn-ico { width: 24px; height: 24px; }
+    
+    @media (max-width: 920px) {
+      .sidebar { display: none; }
+      .content { margin-left: 0; padding-bottom: 80px; }
+      .bottom-nav { display: block; }
+    }
+    
+    /* Verification modal */
+    .verify-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.5);
+      display: none; align-items: center; justify-content: center;
+      z-index: 9999;
+    }
+    .verify-overlay.active { display: flex; }
+    .verify-card {
+      background: #fff; border-radius: 16px; padding: 32px;
+      max-width: 400px; width: 90%; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    }
+    .verify-card h2 { font-size: 20px; margin-bottom: 12px; color: #111827; }
+    .verify-card p { color: #6b7280; margin-bottom: 20px; line-height: 1.5; }
+    .verify-input {
+      width: 100%; padding: 14px; border: 2px solid #e5e7eb;
+      border-radius: 10px; font-size: 16px; text-align: center;
+      text-transform: uppercase; margin-bottom: 16px;
+    }
+    .verify-input:focus { outline: none; border-color: #1d4ed8; }
+    .verify-btn {
+      width: 100%; padding: 14px; background: #1d4ed8; color: #fff;
+      border: none; border-radius: 10px; font-size: 16px;
+      font-weight: 600; cursor: pointer;
+    }
+    .verify-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .verify-error { color: #dc2626; font-size: 14px; margin-top: 12px; }
+  </style>
 </head>
-
 <body class="portal">
 
-  <!-- TOP BAR -->
-  <header class="topbar">
-    <div class="topbar-left">
-      <div class="brand-mini">
-        <div class="brand-dot"></div>
-        <div class="brand-title">Employee Portal</div>
-      </div>
-
-      <!-- Employee badge -->
-      <div class="topbar-pill" id="userBadge">Loading…</div>
+<!-- VERIFICATION MODAL (Shown if employee hasn't verified ID yet) -->
+<div class="verify-overlay" id="verifyModal">
+  <div class="verify-card">
+    <div style="width: 64px; height: 64px; background: #dbeafe; border-radius: 50%; 
+                display: flex; align-items: center; justify-content: center; 
+                margin: 0 auto 16px; color: #1d4ed8; font-size: 28px;">🔐</div>
+    <h2>Verify Your Employee ID</h2>
+    <p>Welcome! Please enter your Employee ID to complete your account setup. 
+       This should have been provided by HR.</p>
+    <input type="text" class="verify-input" id="verifyEmpId" placeholder="SP001" maxlength="10">
+    <button class="verify-btn" id="btnVerify">Verify & Continue</button>
+    <div class="verify-error" id="verifyError"></div>
+    <div style="margin-top: 16px; font-size: 12px; color: #9ca3af;">
+      Don't have an ID? Contact HR at (800) 876-4321
     </div>
-
-    <div class="topbar-right">
-      <!-- Hidden unless admin (JS decides) -->
-      <button class="btn sm ghost" id="btnAdminGo" type="button" style="display:none;">Admin</button>
-      <button class="btn sm ghost" id="btnLogout" type="button">Log out</button>
-    </div>
-  </header>
-
-  <!-- Drawer overlay (compat only; stays unused if you keep bottomnav on mobile) -->
-  <div id="drawerOverlay" class="drawer-overlay"></div>
-
-  <!-- ✅ Desktop shell: sidebar + content -->
-  <div class="shell">
-
-    <!-- SIDEBAR (desktop) -->
-    <aside class="sidebar" id="sidebar">
-      <nav class="nav" id="nav">
-        <a class="nav-item" href="#home" data-route="home">Home</a>
-        <a class="nav-item" href="#progress" data-route="progress">Progress</a>
-
-        <a class="nav-item" href="#shift_selection" data-route="shift_selection">Shift Selection</a>
-        <a class="nav-item" href="#footwearpolicy" data-route="footwearpolicy">Safety Footwear</a>
-        <a class="nav-item" href="#i9" data-route="i9">I-9</a>
-        <a class="nav-item" href="#documents" data-route="documents">Documents</a>
-        <a class="nav-item" href="#firstdayinfo" data-route="firstdayinfo">First Day Info</a>
-
-        <a class="nav-item" href="#schedule" data-route="schedule">Schedule</a>
-        <a class="nav-item" href="#hours" data-route="hours">My Hours</a>
-        <a class="nav-item" href="#payroll" data-route="payroll">Payroll</a>
-        <a class="nav-item" href="#timeoff" data-route="timeoff">Time Off</a>
-        <a class="nav-item" href="#deposit" data-route="deposit">Direct Deposit</a>
-
-        <a class="nav-item" href="#notifications" data-route="notifications">Notifications</a>
-        <a class="nav-item" href="#help" data-route="help">Help</a>
-        <a class="nav-item" href="#more" data-route="more">More</a>
-      </nav>
-
-      <div class="sidebar-foot">
-        <div class="small muted">Status</div>
-        <div class="status-chip" id="statusShift">offline</div>
-      </div>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main class="content">
-      <section class="page-head">
-        <h1 id="pageTitle">Home</h1>
-        <div class="subhead" id="pageSub">Quick access to your schedule, time, pay, and support.</div>
-      </section>
-
-      <!-- employee.js controls this (show only in progress route) -->
-      <section id="stagebar"></section>
-
-      <!-- employee.js renders here -->
-      <section id="pageBody"></section>
-
-      <footer class="footer">
-        <span class="muted">SunPower Corporation</span>
-        • <span class="muted" id="build">Connected</span>
-      </footer>
-    </main>
-
   </div>
-<!-- ✅ BOTTOM NAV (mobile app style) -->
-<nav id="bottomNav" class="bottomnav">
+</div>
 
-  <a class="nav-item bn-item" href="#home" data-route="home" aria-label="Home">
-    <div class="bn-ico" aria-hidden="true">
-      <svg viewBox="0 0 24 24" class="bn-svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 10L12 3l9 7"/>
-        <path d="M5 10v10h14V10"/>
-      </svg>
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="brand-mini">
+    <div class="brand-dot"></div>
+    <div class="brand-title">Employee Portal</div>
+  </div>
+  <div class="topbar-pill" id="userBadge">Loading...</div>
+  <div class="topbar-right">
+    <button class="btn sm ghost" id="btnAdminGo" type="button" style="display:none;">Admin</button>
+    <button class="btn sm ghost" id="btnLogout" type="button">Log out</button>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <nav class="nav" id="nav">
+    <a class="nav-item active" href="#home" data-route="home">Home</a>
+    <a class="nav-item" href="#progress" data-route="progress">Progress</a>
+    <a class="nav-item" href="#shift" data-route="shift">Shift Selection</a>
+    <a class="nav-item" href="#footwear" data-route="footwear">Safety Footwear</a>
+    <a class="nav-item" href="#i9" data-route="i9">I-9 Verification</a>
+    <a class="nav-item" href="#firstday" data-route="firstday">First Day Info</a>
+    <a class="nav-item" href="#schedule" data-route="schedule">Schedule</a>
+    <a class="nav-item" href="#payroll" data-route="payroll">Payroll</a>
+    <a class="nav-item" href="#chat" data-route="chat">HR Chat</a>
+    <a class="nav-item" href="#help" data-route="help">Help</a>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="small muted">Status</div>
+    <div class="status-chip" id="statusShift">offline</div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+  <section class="page-head">
+    <h1 id="pageTitle">Home</h1>
+    <div class="subhead" id="pageSub">Welcome to your SunPower employee portal</div>
+  </section>
+  <section id="stagebar"></section>
+  <section id="pageBody">
+    <div style="text-align: center; padding: 60px 20px; color: #9ca3af;">
+      Loading your portal...
     </div>
-    <div class="bn-txt">Home</div>
-  </a>
+  </section>
+  <footer class="footer">
+    <span class="muted">SunPower Corporation</span>
+    • <span class="muted" id="build">Connected</span>
+  </footer>
+</main>
 
-  <a class="nav-item bn-item" href="#schedule" data-route="schedule" aria-label="Schedule">
-    <div class="bn-ico" aria-hidden="true">
-      <svg viewBox="0 0 24 24" class="bn-svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="5" width="18" height="16" rx="2"/>
-        <path d="M16 3v4M8 3v4M3 11h18"/>
+<!-- MOBILE BOTTOM NAV -->
+<nav class="bottom-nav">
+  <div class="bn-wrap">
+    <a class="bn-item active" href="#home">
+      <svg class="bn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 10L12 3l9 7"/><path d="M5 10v10h14V10"/>
       </svg>
-    </div>
-    <div class="bn-txt">Schedule</div>
-  </a>
-
-  <a class="nav-item bn-item" href="#pay" data-route="pay" aria-label="Pay">
-    <div class="bn-ico" aria-hidden="true">
-      <svg viewBox="0 0 24 24" class="bn-svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2" y="6" width="20" height="12" rx="2"/>
-        <path d="M2 10h20"/>
-        <path d="M6 14h5"/>
+      <span>Home</span>
+    </a>
+    <a class="bn-item" href="#schedule">
+      <svg class="bn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4"/><path d="M3 10h18"/>
       </svg>
-    </div>
-    <div class="bn-txt">Pay</div>
-  </a>
-
-  <a class="nav-item bn-item" href="#benefits" data-route="benefits" aria-label="Benefits">
-    <div class="bn-ico" aria-hidden="true">
-      <svg viewBox="0 0 24 24" class="bn-svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 3l7 4v5c0 5-3.5 7-7 9-3.5-2-7-4-7-9V7l7-4z"/>
-        <path d="M9.5 12.2l1.8 1.8 3.7-3.7"/>
+      <span>Schedule</span>
+    </a>
+    <a class="bn-item" href="#progress">
+      <svg class="bn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
       </svg>
-    </div>
-    <div class="bn-txt">Benefits</div>
-  </a>
-
-  <a class="nav-item bn-item" href="#more" data-route="more" aria-label="More">
-    <div class="bn-ico" aria-hidden="true">
-      <svg viewBox="0 0 24 24" class="bn-svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <span>Progress</span>
+    </a>
+    <a class="bn-item" href="#chat">
+      <svg class="bn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a4 4 0 01-4 4H8l-5 3V7a4 4 0 014-4h10a4 4 0 014 4z"/>
+      </svg>
+      <span>Chat</span>
+    </a>
+    <a class="bn-item" href="#more">
+      <svg class="bn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M4 6h16M4 12h16M4 18h16"/>
       </svg>
-    </div>
-    <div class="bn-txt">More</div>
-  </a>
-
+      <span>More</span>
+    </a>
+  </div>
 </nav>
 
-  <!-- APP INIT -->
-  <script type="module">
-    import { uiActiveNav, uiWireGlobalTaps } from "./assets/ui.js";
-    import { signOutNow } from "./assets/auth.js";
-    import { initEmployeeApp } from "./assets/employee.js";
+<script type="module">
+  import { initEmployeeApp } from './assets/employee.js';
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initEmployeeApp);
+  } else {
+    initEmployeeApp();
+  }
+</script>
 
-    uiWireGlobalTaps();
-
-    document.getElementById("btnLogout").onclick = async () => {
-      await signOutNow();
-      window.location.href = "./index.html";
-    };
-
-    document.getElementById("btnAdminGo").onclick = () => {
-      window.location.href = "./admin.html";
-    };
-
-    await initEmployeeApp();
-
-    uiActiveNav();
-    window.addEventListener("hashchange", uiActiveNav);
-  </script>
-
- 
 </body>
 </html>
