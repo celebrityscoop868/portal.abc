@@ -1,14 +1,31 @@
+// ===============================
+// Firebase (App/Auth/Firestore/Storage)
+// ===============================
+
+// Firebase core
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+// Auth
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+// Firestore
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+// Storage
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
-// ✅ CONFIGURACIÓN DIRECTA - Sin variables de entorno que no funcionan en GitHub Pages
+/**
+ * ✅ CONFIGURACIÓN REAL - SunPower Portal
+ * CORRECCIÓN: storageBucket debe ser .appspot.com (no .firebasestorage.app)
+ */
 const firebaseConfig = {
   apiKey: "AIzaSyA6kZ4LL22vPr5XeTCdtcnCqfs_2g_jjqw",
   authDomain: "sunpower-portal.firebaseapp.com",
   projectId: "sunpower-portal",
-  storageBucket: "sunpower-portal.firebasestorage.app",
+  
+  // ✅ CORREGIDO: .appspot.com es el formato correcto
+  storageBucket: "sunpower-portal.appspot.com",
+  
   messagingSenderId: "557829218180",
   appId: "1:557829218180:web:f5ae1a4362e88a271e87d1",
   measurementId: "G-70553ET048"
