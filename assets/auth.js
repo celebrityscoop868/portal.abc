@@ -1,4 +1,5 @@
-import { auth, db } from "./firebase.js";
+import { auth, db, isFirebaseConfigured } from "./firebase.js";
+
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -10,31 +11,49 @@ import {
   setPersistence,
   browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
 import {
-  doc, getDoc, setDoc, serverTimestamp, updateDoc
+  doc, getDoc, setDoc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-// ✅ ADMIN EMAILS WHITELIST - SOLO ESTOS SON ADMINS
+// ✅ ADMIN EMAILS WHITELIST
 const ADMIN_EMAILS = ['sunpcorporation@gmail.com'];
 
+// ✅ ESTRUCTURA DE 8 PASOS (se crea cuando admin activa usuario)
+function createDefaultSteps() {
+  return [
+    { id: "application", label: "Application", done: true, completedAt: serverTimestamp() },
+    { id: "documents", label: "Documents", done: false, locked: false },
+    { id: "i9", label: "I-9 Verification", done: false, locked: true },
+    { id: "ppe", label: "PPE Acknowledgment", done: false, locked: true },
+    { id: "safety_store", label: "Safety Store", done: false, locked: true },
+    { id: "shift_selection", label: "Shift Selection", done: false, locked: true },
+    { id: "photo_badge", label: "Photo Badge", done: false, locked: true },
+    { id: "first_day", label: "First Day", done: false, locked: true }
+  ];
+}
+
 export async function authReady() {
-  return true;
+  return isFirebaseConfigured();
 }
 
 export function onAuth(cb) {
-  return onAuthStateChanged(auth, cb);
+  try {
+    return onAuthStateChanged(auth, cb);
+  } catch {
+    cb(null);
+    return () => {};
+  }
 }
 
-// ✅ VERIFICAR SI USUARIO ES ADMIN (por email whitelist)
+// ✅ VERIFICAR SI ES ADMIN (whitelist + colección admins)
 export async function isAdminUser(user) {
   if (!user || !user.email) return false;
   
-  // Verificar en whitelist
   if (!ADMIN_EMAILS.includes(user.email.toLowerCase())) {
     return false;
   }
   
-  // Verificar en Firestore (doble seguridad)
   try {
     const adminRef = doc(db, "admins", user.uid);
     const adminSnap = await getDoc(adminRef);
@@ -45,55 +64,10 @@ export async function isAdminUser(user) {
   }
 }
 
-// ✅ CREAR USUARIO COMO EMPLEADO (nunca admin)
-async function ensureUserDoc(user, isNew = false) {
-  if (!user) return;
-
-  const userRef = doc(db, "users", user.uid);
-  const snap = await getDoc(userRef);
-
-  const baseData = {
-    email: user.email || "",
-    fullName: user.displayName || "",
-    updatedAt: serverTimestamp(),
-    lastLoginAt: serverTimestamp(),
-    role: "employee", // ✅ SIEMPRE employee por defecto
-    status: "active",
-    onboardingComplete: false,
-    currentStep: 1, // Paso actual del onboarding
-    steps: {
-      application: { done: true, completedAt: serverTimestamp() }, // Auto-completado
-      documents: { done: false },
-      i9: { done: false },
-      ppe: { done: false, version: null },
-      safetyStore: { done: false, orderId: null },
-      shiftSelection: { done: false },
-      photoBadge: { done: false },
-      firstDay: { done: false }
-    }
-  };
-
-  if (!snap.exists()) {
-    // Nuevo usuario
-    await setDoc(userRef, {
-      ...baseData,
-      createdAt: serverTimestamp(),
-      employeeId: null, // ✅ Sin ID asignado inicialmente
-      verified: false
-    });
-  } else {
-    // Actualizar login
-    const existing = snap.data();
-    await updateDoc(userRef, {
-      lastLoginAt: serverTimestamp(),
-      email: user.email || existing.email,
-      fullName: user.displayName || existing.fullName
-    });
-  }
-}
-
-// ✅ LOGIN CON EMAIL (con verificación de paso actual)
+// ✅ LOGIN PRINCIPAL (usado por empleados y admin)
 export async function signInEmail(email, pass) {
+  if (!isFirebaseConfigured()) throw new Error("Firebase not configured yet.");
+  
   await setPersistence(auth, browserLocalPersistence);
   const cred = await signInWithEmailAndPassword(auth, email, pass);
   
@@ -101,67 +75,89 @@ export async function signInEmail(email, pass) {
   const isAdmin = await isAdminUser(cred.user);
   
   if (isAdmin) {
-    // Crear/actualizar doc admin si no existe
+    // Actualizar lastLoginAt en admins
     const adminRef = doc(db, "admins", cred.user.uid);
-    const adminSnap = await getDoc(adminRef);
-    if (!adminSnap.exists()) {
-      await setDoc(adminRef, {
-        email: cred.user.email,
-        createdAt: serverTimestamp(),
-        lastLoginAt: serverTimestamp()
-      });
-    } else {
-      await updateDoc(adminRef, { lastLoginAt: serverTimestamp() });
-    }
+    await updateDoc(adminRef, { lastLoginAt: serverTimestamp() });
     return { user: cred.user, role: 'admin' };
   }
   
-  // Es empleado
-  await ensureUserDoc(cred.user);
-  return { user: cred.user, role: 'employee' };
+  // Es empleado - verificar estado
+  const userRef = doc(db, "users", cred.user.uid);
+  const snap = await getDoc(userRef);
+  
+  if (!snap.exists()) {
+    throw new Error("User not found. Contact HR to create your account.");
+  }
+  
+  const userData = snap.data();
+  
+  // Actualizar lastLoginAt
+  await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
+  
+  // Verificar si está activo
+  if (userData.status === "suspended") {
+    throw new Error("Your account has been suspended. Contact HR.");
+  }
+  
+  return { 
+    user: cred.user, 
+    role: 'employee',
+    status: userData.status,  // "pending", "active", etc.
+    verified: userData.verified,
+    employeeId: userData.employeeId
+  };
 }
 
-// ✅ REGISTRO (solo empleados)
+// ✅ REGISTRO - SOLO PARA ADMIN CREAR EMPLEADOS (no para login público)
+// Esta función debe llamarse SOLO desde admin.html, nunca desde index.html
+export async function createEmployeeAccount(email, password, fullName) {
+  // Verificar que quien llama es admin
+  const currentUser = auth.currentUser;
+  if (!currentUser) throw new Error("Not authenticated");
+  
+  const isAdmin = await isAdminUser(currentUser);
+  if (!isAdmin) throw new Error("Only admins can create employee accounts");
+  
+  // Crear usuario en Firebase Auth
+  const cred = await createUserWithEmailAndPassword(auth, email, password);
+  
+  // Crear documento en users (sin steps aún, sin employeeId)
+  const userRef = doc(db, "users", cred.user.uid);
+  await setDoc(userRef, {
+    email: email,
+    fullName: fullName || "",
+    role: "employee",
+    status: "pending",        // Pendiente hasta que admin asigne ID
+    verified: false,          // No verificado hasta que ingrese su ID
+    employeeId: null,         // Admin lo asigna después
+    currentStep: 0,
+    onboardingComplete: false,
+    steps: [],                // Vacío hasta que se active
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    lastLoginAt: serverTimestamp()
+  });
+  
+  return cred.user;
+}
+
+// ✅ REGISTRO PÚBLICO - DESHABILITADO (no cualquiera se registra)
 export async function registerEmail(email, pass) {
-  // ✅ BLOQUEAR registro de emails admin
-  if (ADMIN_EMAILS.includes(email.toLowerCase())) {
-    throw new Error("This email is reserved. Please contact IT support.");
-  }
-  
-  await setPersistence(auth, browserLocalPersistence);
-  const cred = await createUserWithEmailAndPassword(auth, email, pass);
-  await ensureUserDoc(cred.user, true);
-  return { user: cred.user, role: 'employee' };
+  throw new Error("Self-registration is disabled. Contact HR to get your account.");
 }
 
-// ✅ GOOGLE SIGN IN (deshabilitado temporalmente hasta arreglar dominios)
+// ✅ GOOGLE SIGN IN - DESHABILITADO
 export async function signInGoogle() {
-  throw new Error("Google Sign In temporarily disabled. Please use email/password.");
-  
-  /* Cuando arregles el dominio, descomenta esto:
-  await setPersistence(auth, browserLocalPersistence);
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: "select_account" });
-  
-  const cred = await signInWithPopup(auth, provider);
-  
-  // Verificar si es admin
-  const isAdmin = await isAdminUser(cred.user);
-  
-  if (isAdmin) {
-    return { user: cred.user, role: 'admin' };
-  }
-  
-  await ensureUserDoc(cred.user);
-  return { user: cred.user, role: 'employee' };
-  */
+  throw new Error("Google Sign In is disabled. Use your company email and password.");
 }
 
 export async function resetPassword(email) {
+  if (!isFirebaseConfigured()) throw new Error("Firebase not configured yet.");
   await sendPasswordResetEmail(auth, email);
 }
 
 export async function signOutNow() {
+  if (!isFirebaseConfigured()) return;
   await signOut(auth);
 }
 
@@ -176,7 +172,7 @@ export async function getRedirectRoute(user) {
   const isAdmin = await isAdminUser(user);
   if (isAdmin) return './admin.html';
   
-  // Es empleado - verificar onboarding
+  // Es empleado - verificar estado
   const userRef = doc(db, "users", user.uid);
   const snap = await getDoc(userRef);
   
@@ -184,8 +180,13 @@ export async function getRedirectRoute(user) {
   
   const data = snap.data();
   
-  // Si no tiene ID asignado, ir a verificación
-  if (!data.employeeId || !data.verified) {
+  // Si no tiene ID asignado, mostrar mensaje de espera
+  if (!data.employeeId) {
+    return './employee.html#wait';  // Pantalla: "Esperando asignación de ID"
+  }
+  
+  // Si tiene ID pero no está verificado, ir a verificación
+  if (!data.verified) {
     return './employee.html#verify';
   }
   
@@ -196,4 +197,139 @@ export async function getRedirectRoute(user) {
   
   // Ir al paso actual
   return `./employee.html#progress`;
+}
+
+// ✅ VERIFICAR ID DE EMPLEADO (empleado ingresa el ID que le dio admin)
+export async function verifyEmployeeId(inputEmployeeId) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Not authenticated");
+  
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+  
+  if (!userSnap.exists()) throw new Error("User not found");
+  
+  const userData = userSnap.data();
+  
+  // Verificar que el ID ingresado coincida con el asignado por admin
+  if (userData.employeeId !== inputEmployeeId) {
+    throw new Error("Incorrect Employee ID. Please check with HR.");
+  }
+  
+  // Activar usuario y crear steps
+  await updateDoc(userRef, {
+    verified: true,
+    status: "active",
+    currentStep: 1,
+    steps: createDefaultSteps(),
+    updatedAt: serverTimestamp()
+  });
+  
+  return true;
+}
+
+// ✅ OBTENER DATOS DEL USUARIO ACTUAL
+export async function getCurrentUserData() {
+  const user = auth.currentUser;
+  if (!user) return null;
+  
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+  return snap.exists() ? snap.data() : null;
+}
+
+// ✅ ACTUALIZAR PASO DEL ONBOARDING (con gating)
+export async function updateOnboardingStep(stepIndex, stepData) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Not authenticated");
+  
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+  
+  if (!snap.exists()) throw new Error("User not found");
+  
+  const data = snap.data();
+  const steps = data.steps || [];
+  
+  // Validar índice
+  if (stepIndex < 0 || stepIndex >= 8) throw new Error("Invalid step");
+  
+  // GATING: Verificar que paso anterior esté completo (excepto paso 0)
+  if (stepIndex > 0 && !steps[stepIndex - 1]?.done) {
+    throw new Error("Please complete the previous step first.");
+  }
+  
+  // Actualizar paso actual
+  steps[stepIndex] = { 
+    ...steps[stepIndex], 
+    ...stepData, 
+    done: true,
+    locked: false,
+    completedAt: serverTimestamp()
+  };
+  
+  // Desbloquear siguiente paso (si existe)
+  if (stepIndex < 7) {
+    steps[stepIndex + 1].locked = false;
+  }
+  
+  // Calcular progreso
+  const completedSteps = steps.filter(s => s.done).length;
+  const onboardingComplete = completedSteps === 8;
+  const currentStep = onboardingComplete ? 8 : stepIndex + 1;
+  
+  await updateDoc(userRef, {
+    steps: steps,
+    currentStep: currentStep,
+    onboardingComplete: onboardingComplete,
+    updatedAt: serverTimestamp()
+  });
+  
+  return { onboardingComplete, currentStep, nextStepUnlocked: stepIndex < 7 };
+}
+
+// ✅ ASIGNAR ID DE EMPLEADO (SOLO ADMIN)
+export async function assignEmployeeId(targetUserId, employeeId) {
+  // Verificar que quien llama es admin
+  const currentUser = auth.currentUser;
+  if (!currentUser) throw new Error("Not authenticated");
+  
+  const isAdmin = await isAdminUser(currentUser);
+  if (!isAdmin) throw new Error("Only admins can assign employee IDs");
+  
+  // Verificar que el ID existe en allowedEmployees y está disponible
+  const allowedRef = doc(db, "allowedEmployees", employeeId);
+  const allowedSnap = await getDoc(allowedRef);
+  
+  if (!allowedSnap.exists()) {
+    throw new Error("Employee ID not found in allowed list.");
+  }
+  
+  const allowedData = allowedSnap.data();
+  if (allowedData.assignedTo) {
+    throw new Error("This Employee ID is already assigned.");
+  }
+  
+  // Asignar al usuario
+  const userRef = doc(db, "users", targetUserId);
+  const userSnap = await getDoc(userRef);
+  
+  if (!userSnap.exists()) {
+    throw new Error("Target user not found");
+  }
+  
+  // Actualizar usuario
+  await updateDoc(userRef, {
+    employeeId: employeeId,
+    updatedAt: serverTimestamp()
+  });
+  
+  // Marcar ID como asignado
+  await updateDoc(allowedRef, {
+    assignedTo: targetUserId,
+    assignedAt: serverTimestamp(),
+    status: "assigned"
+  });
+  
+  return true;
 }
