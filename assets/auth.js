@@ -12,7 +12,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 import {
-  doc, getDoc, setDoc, updateDoc, serverTimestamp, query, where, collection, getDocs
+  doc, getDoc, setDoc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 // ✅ ADMIN EMAILS WHITELIST
@@ -90,7 +90,20 @@ export async function signInGoogle() {
   const cred = await signInWithPopup(auth, provider);
   const user = cred.user;
   
-  // Check if already registered and verified
+  // ✅ Buscar por ID de documento (email)
+  const allowedRef = doc(db, "allowedEmployees", user.email.toLowerCase());
+  const allowedSnap = await getDoc(allowedRef);
+  
+  if (!allowedSnap.exists()) {
+    return { user, notAuthorized: true };
+  }
+  
+  const allowedData = allowedSnap.data();
+  
+  if (allowedData.active !== true) {
+    return { user, notAuthorized: true };
+  }
+  
   const userRef = doc(db, "users", user.uid);
   const userSnap = await getDoc(userRef);
   
@@ -99,21 +112,6 @@ export async function signInGoogle() {
     return { user, role: 'employee', verified: true };
   }
   
-  // Check if email is pre-registered in allowedEmployees
-  const allowedQuery = query(
-    collection(db, "allowedEmployees"), 
-    where("email", "==", user.email.toLowerCase()),
-    where("active", "==", true)
-  );
-  const allowedSnap = await getDocs(allowedQuery);
-  
-  if (allowedSnap.empty) {
-    // Email not pre-registered by admin
-    return { user, notAuthorized: true };
-  }
-  
-  // Email is pre-registered, needs ID verification
-  const allowedData = allowedSnap.docs[0].data();
   return { 
     user, 
     role: 'employee', 
@@ -131,7 +129,6 @@ export async function verifyEmployeeId(user, inputEmpId) {
     throw new Error("Invalid ID format. Use format: SP001");
   }
   
-  // Verify ID exists and matches email
   const allowedRef = doc(db, "allowedEmployees", empId);
   const allowedSnap = await getDoc(allowedRef);
   
@@ -141,22 +138,18 @@ export async function verifyEmployeeId(user, inputEmpId) {
   
   const allowedData = allowedSnap.data();
   
-  // Verify email matches
   if (allowedData.email?.toLowerCase() !== user.email?.toLowerCase()) {
     throw new Error("This ID is assigned to a different email address.");
   }
   
-  // Verify active status
   if (allowedData.active !== true) {
     throw new Error("This Employee ID is inactive. Contact HR.");
   }
   
-  // Check if already verified by another account
   if (allowedData.uid && allowedData.uid !== user.uid) {
     throw new Error("This Employee ID is already linked to another account.");
   }
   
-  // Create/update user document
   const userRef = doc(db, "users", user.uid);
   const userSnap = await getDoc(userRef);
   
@@ -185,14 +178,12 @@ export async function verifyEmployeeId(user, inputEmpId) {
     await updateDoc(userRef, userData);
   }
   
-  // Update allowedEmployees to mark as verified
   await updateDoc(allowedRef, {
     status: "verified",
     verifiedAt: serverTimestamp(),
     uid: user.uid
   });
   
-  // Copy data from employeeRecords if exists
   const recordRef = doc(db, "employeeRecords", empId);
   const recordSnap = await getDoc(recordRef);
   if (recordSnap.exists()) {
