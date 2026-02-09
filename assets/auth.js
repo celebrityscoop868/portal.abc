@@ -1,5 +1,4 @@
-import { auth, db, isFirebaseConfigured } from "./firebase.js";
-
+import { auth, db } from "./firebase.js";
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -11,118 +10,190 @@ import {
   setPersistence,
   browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-
 import {
-  doc, getDoc, setDoc, serverTimestamp
+  doc, getDoc, setDoc, serverTimestamp, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-// For UI preview: if Firebase not configured, we still render screens
+// ✅ ADMIN EMAILS WHITELIST - SOLO ESTOS SON ADMINS
+const ADMIN_EMAILS = ['sunpcorporation@gmail.com'];
+
 export async function authReady() {
-  return isFirebaseConfigured();
+  return true;
 }
 
 export function onAuth(cb) {
+  return onAuthStateChanged(auth, cb);
+}
+
+// ✅ VERIFICAR SI USUARIO ES ADMIN (por email whitelist)
+export async function isAdminUser(user) {
+  if (!user || !user.email) return false;
+  
+  // Verificar en whitelist
+  if (!ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+    return false;
+  }
+  
+  // Verificar en Firestore (doble seguridad)
   try {
-    return onAuthStateChanged(auth, cb);
-  } catch {
-    cb(null);
-    return () => {};
+    const adminRef = doc(db, "admins", user.uid);
+    const adminSnap = await getDoc(adminRef);
+    return adminSnap.exists();
+  } catch (e) {
+    console.error("Error checking admin:", e);
+    return false;
   }
 }
 
-/**
- * ✅ FIX CRÍTICO:
- * Antes estabas haciendo setDoc(base, {merge:true}) con appointment/steps vacíos
- * y eso TE BORRABA la cita y el progreso cada vez que el usuario se loguea.
- *
- * Ahora:
- * - Si NO existe el doc: lo crea MINIMO (sin appointment/steps/notifications).
- * - Si existe: SOLO actualiza email/fullName + timestamps.
- * - NO pisa nada que admin haya guardado.
- */
-async function ensureUserDoc(user) {
-  if (!user || !isFirebaseConfigured()) return;
+// ✅ CREAR USUARIO COMO EMPLEADO (nunca admin)
+async function ensureUserDoc(user, isNew = false) {
+  if (!user) return;
 
-  const ref = doc(db, "users", user.uid);
-  const snap = await getDoc(ref);
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
 
-  const patch = {
+  const baseData = {
     email: user.email || "",
     fullName: user.displayName || "",
     updatedAt: serverTimestamp(),
-    lastLoginAt: serverTimestamp()
+    lastLoginAt: serverTimestamp(),
+    role: "employee", // ✅ SIEMPRE employee por defecto
+    status: "active",
+    onboardingComplete: false,
+    currentStep: 1, // Paso actual del onboarding
+    steps: {
+      application: { done: true, completedAt: serverTimestamp() }, // Auto-completado
+      documents: { done: false },
+      i9: { done: false },
+      ppe: { done: false, version: null },
+      safetyStore: { done: false, orderId: null },
+      shiftSelection: { done: false },
+      photoBadge: { done: false },
+      firstDay: { done: false }
+    }
   };
 
   if (!snap.exists()) {
-    await setDoc(ref, {
-      ...patch,
-      role: "employee",
-      status: "active",
-      createdAt: serverTimestamp()
-    }, { merge: true });
+    // Nuevo usuario
+    await setDoc(userRef, {
+      ...baseData,
+      createdAt: serverTimestamp(),
+      employeeId: null, // ✅ Sin ID asignado inicialmente
+      verified: false
+    });
   } else {
-    // ✅ solo actualizar lo mínimo (NO tocar appointment/steps/notifications/contacts)
-    await setDoc(ref, patch, { merge: true });
+    // Actualizar login
+    const existing = snap.data();
+    await updateDoc(userRef, {
+      lastLoginAt: serverTimestamp(),
+      email: user.email || existing.email,
+      fullName: user.displayName || existing.fullName
+    });
   }
 }
 
+// ✅ LOGIN CON EMAIL (con verificación de paso actual)
 export async function signInEmail(email, pass) {
-  if (!isFirebaseConfigured()) throw new Error("Firebase not configured yet.");
   await setPersistence(auth, browserLocalPersistence);
-
   const cred = await signInWithEmailAndPassword(auth, email, pass);
+  
+  // Verificar si es admin
+  const isAdmin = await isAdminUser(cred.user);
+  
+  if (isAdmin) {
+    // Crear/actualizar doc admin si no existe
+    const adminRef = doc(db, "admins", cred.user.uid);
+    const adminSnap = await getDoc(adminRef);
+    if (!adminSnap.exists()) {
+      await setDoc(adminRef, {
+        email: cred.user.email,
+        createdAt: serverTimestamp(),
+        lastLoginAt: serverTimestamp()
+      });
+    } else {
+      await updateDoc(adminRef, { lastLoginAt: serverTimestamp() });
+    }
+    return { user: cred.user, role: 'admin' };
+  }
+  
+  // Es empleado
   await ensureUserDoc(cred.user);
-  return cred.user;
+  return { user: cred.user, role: 'employee' };
 }
 
+// ✅ REGISTRO (solo empleados)
 export async function registerEmail(email, pass) {
-  if (!isFirebaseConfigured()) throw new Error("Firebase not configured yet.");
+  // ✅ BLOQUEAR registro de emails admin
+  if (ADMIN_EMAILS.includes(email.toLowerCase())) {
+    throw new Error("This email is reserved. Please contact IT support.");
+  }
+  
   await setPersistence(auth, browserLocalPersistence);
-
   const cred = await createUserWithEmailAndPassword(auth, email, pass);
-  await ensureUserDoc(cred.user);
-  return cred.user;
+  await ensureUserDoc(cred.user, true);
+  return { user: cred.user, role: 'employee' };
 }
 
+// ✅ GOOGLE SIGN IN (deshabilitado temporalmente hasta arreglar dominios)
 export async function signInGoogle() {
-  if (!isFirebaseConfigured()) throw new Error("Firebase not configured yet.");
+  throw new Error("Google Sign In temporarily disabled. Please use email/password.");
+  
+  /* Cuando arregles el dominio, descomenta esto:
   await setPersistence(auth, browserLocalPersistence);
-
-  // Create provider inside the function (cleaner + avoids weird cached state)
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
-
-  try {
-    const cred = await signInWithPopup(auth, provider);
-    await ensureUserDoc(cred.user);
-    return cred.user;
-  } catch (e) {
-    const code = e?.code || "";
-    // Most common on iPhone if Safari blocks popups
-    if (code === "auth/popup-blocked" || code === "auth/cancelled-popup-request") {
-      throw new Error(
-        "Popup blocked. On iPhone: Settings > Safari > Block Pop-ups = OFF, then try again. " +
-        "Also make sure you tapped the button (not auto-redirect)."
-      );
-    }
-    // If they are in an in-app browser sometimes it breaks popup
-    if (code === "auth/operation-not-supported-in-this-environment") {
-      throw new Error("Google sign-in not supported in this browser. Open in Safari/Chrome (not inside an app).");
-    }
-    throw e;
+  
+  const cred = await signInWithPopup(auth, provider);
+  
+  // Verificar si es admin
+  const isAdmin = await isAdminUser(cred.user);
+  
+  if (isAdmin) {
+    return { user: cred.user, role: 'admin' };
   }
+  
+  await ensureUserDoc(cred.user);
+  return { user: cred.user, role: 'employee' };
+  */
 }
 
 export async function resetPassword(email) {
-  if (!isFirebaseConfigured()) throw new Error("Firebase not configured yet.");
   await sendPasswordResetEmail(auth, email);
 }
 
 export async function signOutNow() {
-  if (!isFirebaseConfigured()) return;
   await signOut(auth);
 }
 
 export async function getCurrentUserEmail() {
   return auth?.currentUser?.email || "";
+}
+
+// ✅ OBTENER RUTA DE REDIRECCIÓN SEGÚN ROL Y ESTADO
+export async function getRedirectRoute(user) {
+  if (!user) return './index.html';
+  
+  const isAdmin = await isAdminUser(user);
+  if (isAdmin) return './admin.html';
+  
+  // Es empleado - verificar onboarding
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+  
+  if (!snap.exists()) return './index.html';
+  
+  const data = snap.data();
+  
+  // Si no tiene ID asignado, ir a verificación
+  if (!data.employeeId || !data.verified) {
+    return './employee.html#verify';
+  }
+  
+  // Si onboarding completo, ir a home
+  if (data.onboardingComplete) {
+    return './employee.html#home';
+  }
+  
+  // Ir al paso actual
+  return `./employee.html#progress`;
 }
