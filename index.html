@@ -343,7 +343,7 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
     </p>
 </footer>
 
-<!-- Application Scripts -->
+// Application Scripts
 <script type="module">
     import { uiSetText, uiShow, uiToast } from "./assets/ui.js";
     import {
@@ -351,15 +351,13 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
         signInEmail,
         signInGoogle,
         registerEmail,
-        resetPassword
+        resetPassword,
+        isAdminUser,
+        getRedirectRoute
     } from "./assets/auth.js";
-
-    import { auth, db, isFirebaseConfigured } from "./assets/firebase.js";
-    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const yearEl = document.getElementById("year");
     const msg = document.getElementById("msg");
-    const firebaseNotice = document.getElementById("firebaseNotice");
     const emailEl = document.getElementById("email");
     const passEl = document.getElementById("pass");
 
@@ -368,7 +366,6 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
     const btnReset = document.getElementById("btnReset");
     const btnGoogle = document.getElementById("btnGoogle");
 
-    // Set current year
     yearEl.textContent = new Date().getFullYear();
 
     function showErr(e) { 
@@ -384,54 +381,6 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
         btnLogin.style.opacity = b ? "0.7" : "1";
     }
 
-    const EMPLOYEE_DEFAULT_URL = "./employee.html#progress";
-    const ADMIN_URL = "./admin.html";
-    const intent = sessionStorage.getItem("postLoginIntent") || "";
-
-    function goEmployee() {
-        window.location.href = EMPLOYEE_DEFAULT_URL;
-    }
-    
-    function goAdmin() {
-        window.location.href = ADMIN_URL;
-    }
-
-    // Check Firebase configuration
-    try {
-        const ok = await authReady();
-        if (!ok) uiShow(firebaseNotice, true);
-    } catch {
-        uiShow(firebaseNotice, true);
-    }
-
-    async function goNextByRole() {
-        try {
-            if (typeof isFirebaseConfigured === "function" && !isFirebaseConfigured()) {
-                goEmployee();
-                return;
-            }
-        } catch { 
-            goEmployee();
-            return;
-        }
-
-        const user = auth?.currentUser;
-        if (!user) { 
-            goEmployee();
-            return;
-        }
-
-        try {
-            const ref = doc(db, "admins", user.uid);
-            const snap = await getDoc(ref);
-            const d = snap.exists() ? snap.data() : {};
-            const isAdmin = snap.exists() && (d.role === "admin" || d.isAdmin === true);
-            isAdmin ? goAdmin() : goEmployee();
-        } catch { 
-            goEmployee();
-        }
-    }
-
     async function doLogin() {
         uiSetText(msg, "");
         setBusy(true);
@@ -439,8 +388,12 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
             const email = emailEl.value.trim();
             const pass = passEl.value.trim();
             if (!email || !pass) throw new Error("Enter email and password.");
-            await signInEmail(email, pass);
-            await goNextByRole();
+            
+            const result = await signInEmail(email, pass);
+            const redirectUrl = await getRedirectRoute(result.user);
+            
+            window.location.href = redirectUrl;
+            
         } catch (e) {
             showErr(e);
             setBusy(false);
@@ -451,9 +404,9 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
         uiSetText(msg, "");
         setBusy(true);
         try {
-            await registerEmail(emailEl.value.trim(), passEl.value.trim());
-            uiToast("Account created successfully!");
-            await goNextByRole();
+            const result = await registerEmail(emailEl.value.trim(), passEl.value.trim());
+            uiToast("Account created! Please verify your employee ID.");
+            window.location.href = './employee.html#verify';
         } catch (e) {
             showErr(e);
             setBusy(false);
@@ -479,8 +432,9 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
         uiSetText(msg, "");
         setBusy(true);
         try {
-            await signInGoogle();
-            await goNextByRole();
+            const result = await signInGoogle();
+            const redirectUrl = await getRedirectRoute(result.user);
+            window.location.href = redirectUrl;
         } catch (e) {
             showErr(e);
             setBusy(false);
