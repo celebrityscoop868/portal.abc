@@ -108,7 +108,7 @@ function defaultUserDoc(user) {
     email: user?.email || "",
     fullName: user?.displayName || "",
     role: "employee",
-    status: "pending_verification", // pending_verification → active
+    status: "pending_verification",
     employeeId: "",
     steps: [
       { id: "shift_selection", label: "Shift Selection", done: false, locked: false },
@@ -164,147 +164,7 @@ async function isAdminUser(user) {
   } catch { return false; }
 }
 
-// ==========================================
-// VERIFICATION FLOW (Critical for new employees)
-// ==========================================
-
-async function checkVerificationStatus(user) {
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
-  
-  if (!userSnap.exists()) {
-    // New Google Sign In - need to verify ID
-    return { needsVerification: true, userData: null };
-  }
-  
-  const userData = userSnap.data();
-  const empId = userData.employeeId;
-  
-  if (!empId || userData.status === "pending_verification") {
-    return { needsVerification: true, userData };
-  }
-  
-  return { needsVerification: false, userData, empId };
-}
-
-async function verifyEmployeeId(user, inputId) {
-  const empId = normalizeEmpId(inputId);
-  if (!empId) throw new Error("Invalid ID format. Use: SP001");
-  
-  // Check if ID exists in allowedEmployees
-  const allowedRef = ALLOWED_DOC(empId);
-  const allowedSnap = await getDoc(allowedRef);
-  
-  if (!allowedSnap.exists()) {
-    throw new Error("Employee ID not found. Contact HR if you believe this is an error.");
-  }
-  
-  const allowedData = allowedSnap.data();
-  
-  // Check if already assigned to another user
-  if (allowedData.assignedTo && allowedData.assignedTo !== user.uid) {
-    throw new Error("This ID is already assigned to another account.");
-  }
-  
-  // Check email matches
-  if (allowedData.email && allowedData.email !== user.email) {
-    throw new Error("This ID is registered to a different email address.");
-  }
-  
-  // All checks passed - create/verify user document
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
-  
-  const baseData = defaultUserDoc(user);
-  
-  if (!userSnap.exists()) {
-    // Create new user document
-    await setDoc(userRef, {
-      ...baseData,
-      employeeId: empId,
-      status: "active",
-      fullName: allowedData.name || user.displayName || "",
-      email: user.email,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
-  } else {
-    // Update existing
-    await updateDoc(userRef, {
-      employeeId: empId,
-      status: "active",
-      updatedAt: serverTimestamp()
-    });
-  }
-  
-  // Update allowedEmployees to mark as verified
-  await updateDoc(allowedRef, {
-    assignedTo: user.uid,
-    status: "verified",
-    verifiedAt: serverTimestamp(),
-    verifiedEmail: user.email
-  });
-  
-  // Create employeeRecords if doesn't exist
-  const recordRef = RECORD_DOC(empId);
-  const recordSnap = await getDoc(recordRef);
-  
-  if (!recordSnap.exists()) {
-    await setDoc(recordRef, {
-      employeeId: empId,
-      name: allowedData.name || user.displayName || "",
-      email: user.email,
-      createdAt: serverTimestamp(),
-      steps: baseData.steps,
-      currentStep: 0,
-      shift: {},
-      appointment: {},
-      chat: []
-    });
-  }
-  
-  return empId;
-}
-
-function showVerificationModal(user) {
-  const modal = $("verifyModal");
-  const input = $("verifyEmpId");
-  const btn = $("btnVerify");
-  const error = $("verifyError");
-  
-  modal.classList.add("active");
-  
-  btn.onclick = async () => {
-    const val = input.value.trim();
-    if (!val) return;
-    
-    btn.disabled = true;
-    btn.textContent = "Verifying...";
-    error.textContent = "";
-    
-    try {
-      const empId = await verifyEmployeeId(user, val);
-      modal.classList.remove("active");
-      uiToast(`Welcome! Your account is now verified.`);
-      // Reload to initialize with verified state
-      setTimeout(() => location.reload(), 1000);
-    } catch (e) {
-      error.textContent = e.message;
-      btn.disabled = false;
-      btn.textContent = "Verify & Continue";
-    }
-  };
-  
-  input.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") btn.click();
-  });
-  input.focus();
-}
-
-// ==========================================
-// UI COMPONENTS
-// ==========================================
-
+// ---------- UI COMPONENTS ----------
 function getStepStatus(stepId, userData) {
   const steps = userData?.steps || [];
   const stepIndex = steps.findIndex(s => s.id === stepId);
@@ -335,9 +195,7 @@ function azIcon(name) {
   return icons[name] || icons.info;
 }
 
-// ==========================================
-// ROUTE RENDERERS
-// ==========================================
+// ---------- ROUTE RENDERERS ----------
 
 function renderHome(publicData, recordData, userData) {
   const steps = userData?.steps || [];
@@ -491,9 +349,7 @@ function renderProgress(userData, recordData) {
   `);
 }
 
-// ==========================================
-// ONBOARDING PAGES
-// ==========================================
+// ---------- ONBOARDING PAGES ----------
 
 function renderShiftSelection(userData, saveUserPatch) {
   const status = getStepStatus("shift_selection", userData);
@@ -1074,9 +930,7 @@ function renderLockedStep(message, linkHref) {
   `;
 }
 
-// ==========================================
-// CHAT - HR Communication
-// ==========================================
+// ---------- CHAT - HR Communication ----------
 
 function renderChat(userData, empId) {
   setPage("HR Chat", "Direct messaging with Human Resources", `
@@ -1229,9 +1083,7 @@ async function loadChatMessages(empId) {
   });
 }
 
-// ==========================================
-// SCHEDULE
-// ==========================================
+// ---------- SCHEDULE ----------
 
 function renderSchedule(recordData) {
   const today = new Date();
@@ -1327,9 +1179,7 @@ function renderSchedule(recordData) {
   `);
 }
 
-// ==========================================
-// PAYROLL
-// ==========================================
+// ---------- PAYROLL ----------
 
 function renderPayroll(recordData) {
   setPage("Payroll", "Compensation and payment information", `
@@ -1375,9 +1225,7 @@ function renderPayroll(recordData) {
   `);
 }
 
-// ==========================================
-// HELP & SUPPORT
-// ==========================================
+// ---------- HELP & SUPPORT ----------
 
 function renderHelp(publicData, empId, user) {
   const help = publicData?.help || defaultPublicContent().help;
@@ -1525,9 +1373,7 @@ function renderHelp(publicData, empId, user) {
   }
 }
 
-// ==========================================
-// ROUTER
-// ==========================================
+// ---------- ROUTER ----------
 
 function renderRoute(userData, saveUserPatch, publicData, recordData, ctx) {
   // Update active nav items
@@ -1571,9 +1417,7 @@ function renderRoute(userData, saveUserPatch, publicData, recordData, ctx) {
   }
 }
 
-// ==========================================
-// INITIALIZATION
-// ==========================================
+// ---------- INITIALIZATION ----------
 
 export async function initEmployeeApp() {
   const badge = $("userBadge");
@@ -1650,21 +1494,24 @@ export async function initEmployeeApp() {
         adminBtn.onclick = () => window.location.href = "./admin.html";
       }
 
-      // Check verification status
-      const { needsVerification, userData: existingData } = await checkVerificationStatus(user);
-
-      if (needsVerification) {
-        uiSetText(badge, "Verification Required");
-        showVerificationModal(user);
-        return; // Stop here until verified
+      // IMPORTANTE: La verificación ahora se hace en index.html
+      // Si llegamos aquí, el usuario ya está verificado
+      // Pero verificamos por si acaso
+      
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+      
+      if (!userSnap.exists() || !userSnap.data().verified) {
+        // No debería pasar, pero redirigimos a index para verificar
+        window.location.href = "./index.html";
+        return;
       }
 
-      // User is verified - proceed
-      currentEmpId = existingData.employeeId;
+      const userData = userSnap.data();
+      currentEmpId = userData.employeeId;
       uiSetText(badge, currentEmpId);
 
       // Setup real-time listeners
-      const userRef = doc(db, "users", user.uid);
       const recordRef = RECORD_DOC(currentEmpId);
       const publicRef = PUBLIC_DOC();
 
