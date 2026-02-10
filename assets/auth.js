@@ -12,20 +12,17 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 import {
-  doc, getDoc, setDoc, updateDoc, serverTimestamp
+  doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-// ✅ ADMIN EMAILS
-const ADMIN_EMAILS = ['sunpcorporation@gmail.com'];
 
 // ✅ PASOS DEFAULT
 function createDefaultSteps() {
   return [
-    { id: "shift_selection", label: "Shift Selection", done: false },
-    { id: "footwear", label: "Safety Footwear", done: false },
-    { id: "i9", label: "I-9 Verification Ready", done: false },
-    { id: "photo_badge", label: "Photo Badge", done: false },
-    { id: "firstday", label: "First Day Preparation", done: false }
+    { id: "shift_selection", label: "Shift Selection", done: false, locked: false },
+    { id: "footwear", label: "Safety Footwear", done: false, locked: true },
+    { id: "i9", label: "I-9 Verification Ready", done: false, locked: true },
+    { id: "photo_badge", label: "Photo Badge", done: false, locked: true },
+    { id: "firstday", label: "First Day Preparation", done: false, locked: true }
   ];
 }
 
@@ -42,13 +39,21 @@ export function onAuth(cb) {
   }
 }
 
-// ✅ VERIFICAR ADMIN
+// ✅ VERIFICAR SI ES ADMIN (busca en colección admins por UID)
 export async function isAdminUser(user) {
-  if (!user || !user.email) return false;
-  return ADMIN_EMAILS.includes(user.email.toLowerCase());
+  if (!user || !user.uid) return false;
+  
+  try {
+    const adminRef = doc(db, "admins", user.uid);
+    const adminSnap = await getDoc(adminRef);
+    return adminSnap.exists();
+  } catch (error) {
+    console.error("Error checking admin:", error);
+    return false;
+  }
 }
 
-// ✅ LOGIN EMAIL (solo admin)
+// ✅ LOGIN EMAIL (solo para admins)
 export async function signInEmail(email, pass) {
   if (!isFirebaseConfigured()) throw new Error("Firebase not configured");
   
@@ -63,6 +68,36 @@ export async function signInEmail(email, pass) {
   return { user: cred.user, role: 'admin' };
 }
 
+// ✅ BUSCAR EMPLEADO POR EMAIL en allowedEmployees
+async function findAllowedEmployeeByEmail(email) {
+  const emailLower = email.toLowerCase().trim();
+  
+  // Query por campo email
+  const q = query(collection(db, "allowedEmployees"), where("email", "==", emailLower));
+  const querySnap = await getDocs(q);
+  
+  if (!querySnap.empty) {
+    const doc = querySnap.docs[0];
+    return { id: doc.id, data: doc.data() };
+  }
+  
+  return null;
+}
+
+// ✅ BUSCAR EMPLEADO POR ID en allowedEmployees
+async function findAllowedEmployeeById(empId) {
+  const empIdUpper = empId.toString().toUpperCase().trim();
+  
+  const allowedRef = doc(db, "allowedEmployees", empIdUpper);
+  const allowedSnap = await getDoc(allowedRef);
+  
+  if (allowedSnap.exists()) {
+    return { id: empIdUpper, data: allowedSnap.data() };
+  }
+  
+  return null;
+}
+
 // ✅ GOOGLE SIGN IN - FLUJO CORREGIDO
 export async function signInGoogle() {
   if (!isFirebaseConfigured()) throw new Error("Firebase not configured");
@@ -72,70 +107,110 @@ export async function signInGoogle() {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
   
-  // 1. Crear/autenticar usuario en Firebase Auth
-  const cred = await signInWithPopup(auth, provider);
-  const user = cred.user;
-  
-  // 2. Buscar si tiene ID pre-asignado en allowedEmployees (por email)
-  const allowedRef = doc(db, "allowedEmployees", user.email.toLowerCase());
-  const allowedSnap = await getDoc(allowedRef);
-  
-  // 3. Si NO está en allowedEmployees → rechazar
-  if (!allowedSnap.exists()) {
-    await signOut(auth); // Desloguear al usuario no autorizado
-    return { notAuthorized: true, email: user.email };
+  try {
+    // 1. Autenticar con Google
+    const cred = await signInWithPopup(auth, provider);
+    const user = cred.user;
+    
+    console.log("✅ Google auth success:", user.email);
+    
+    // 2. Verificar si es admin primero
+    const isAdmin = await isAdminUser(user);
+    if (isAdmin) {
+      console.log("✅ Admin user detected");
+      return { user, role: 'admin', isAdmin: true };
+    }
+    
+    // 3. Buscar si el email está en allowedEmployees
+    const allowedEmployee = await findAllowedEmployeeByEmail(user.email);
+    
+    // 4. Si NO está en allowedEmployees → mostrar gate (no hacer signOut)
+    if (!allowedEmployee) {
+      console.log("⚠️ Email not in allowedEmployees:", user.email);
+      return { 
+        user, 
+        role: 'employee', 
+        needsVerification: true,
+        notRegistered: true,
+        email: user.email 
+      };
+    }
+    
+    const allowedData = allowedEmployee.data;
+    console.log("✅ Found allowedEmployee:", allowedData);
+    
+    // 5. Si no está activo → mostrar gate (no rechazar)
+    if (allowedData.active !== true) {
+      console.log("⚠️ Employee not active");
+      return { 
+        user, 
+        role: 'employee', 
+        needsVerification: true,
+        notActive: true,
+        email: user.email 
+      };
+    }
+    
+    // 6. Verificar si ya existe en users (ya verificó antes)
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      if (userData.verified === true && userData.employeeId) {
+        // Ya está verificado, entrar directo
+        console.log("✅ Returning verified user");
+        return { user, role: 'employee', verified: true, data: userData };
+      }
+    }
+    
+    // 7. Primer login o no verificado → mostrar gate
+    console.log("⚠️ Needs verification");
+    return { 
+      user, 
+      role: 'employee', 
+      needsVerification: true,
+      employeeId: allowedData.employeeId,
+      email: user.email,
+      name: allowedData.name || user.displayName || ""
+    };
+    
+  } catch (error) {
+    console.error("❌ Google sign in error:", error);
+    throw error;
   }
-  
-  const allowedData = allowedSnap.data();
-  
-  // 4. Si no está activo → rechazar
-  if (allowedData.active !== true) {
-    await signOut(auth);
-    return { notAuthorized: true, email: user.email };
-  }
-  
-  // 5. Verificar si ya existe en users
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
-  
-  // 6. Si ya existe y está verificado → login normal
-  if (userSnap.exists() && userSnap.data()?.verified === true) {
-    await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
-    return { user, role: 'employee', verified: true };
-  }
-  
-  // 7. Primer login → necesita verificar ID
-  return { 
-    user, 
-    role: 'employee', 
-    needsVerification: true,
-    employeeId: allowedData.employeeId
-  };
 }
 
-// ✅ VERIFICAR ID DE EMPLEADO
+// ✅ VERIFICAR ID DE EMPLEADO (desde el gate)
 export async function verifyEmployeeId(user, inputEmpId) {
   if (!user) throw new Error("Not authenticated");
   
   const empId = inputEmpId.toString().toUpperCase().trim();
   
-  // Verificar que el ID coincida con el asignado
-  const allowedRef = doc(db, "allowedEmployees", user.email.toLowerCase());
-  const allowedSnap = await getDoc(allowedRef);
+  // Buscar el ID en allowedEmployees
+  const allowedEmployee = await findAllowedEmployeeById(empId);
   
-  if (!allowedSnap.exists()) {
-    throw new Error("Email not registered");
+  if (!allowedEmployee) {
+    throw new Error("Employee ID not found. Please check your ID or contact HR.");
   }
   
-  const allowedData = allowedSnap.data();
+  const allowedData = allowedEmployee.data;
   
-  if (allowedData.employeeId !== empId) {
-    throw new Error("Incorrect Employee ID");
+  // Verificar que el email coincida
+  if (allowedData.email && allowedData.email.toLowerCase() !== user.email.toLowerCase()) {
+    throw new Error("This ID is registered to a different email address.");
   }
   
-  // Crear documento de usuario verificado
+  // Verificar que esté activo
+  if (allowedData.active !== true) {
+    throw new Error("This account is not active. Contact HR for assistance.");
+  }
+  
+  // Crear/actualizar documento en users
   const userRef = doc(db, "users", user.uid);
-  await setDoc(userRef, {
+  const userSnap = await getDoc(userRef);
+  
+  const userData = {
     uid: user.uid,
     email: user.email.toLowerCase(),
     fullName: user.displayName || allowedData.name || "",
@@ -144,21 +219,35 @@ export async function verifyEmployeeId(user, inputEmpId) {
     status: "active",
     verified: true,
     verifiedAt: serverTimestamp(),
-    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
     lastLoginAt: serverTimestamp(),
     currentStep: 0,
     onboardingComplete: false,
     steps: createDefaultSteps()
-  });
+  };
   
-  // Marcar como verificado en allowedEmployees
+  if (!userSnap.exists()) {
+    // Crear nuevo usuario
+    await setDoc(userRef, {
+      ...userData,
+      createdAt: serverTimestamp()
+    });
+  } else {
+    // Actualizar existente
+    await updateDoc(userRef, userData);
+  }
+  
+  // Actualizar allowedEmployees
+  const allowedRef = doc(db, "allowedEmployees", empId);
   await updateDoc(allowedRef, {
     status: "verified",
     verifiedAt: serverTimestamp(),
-    uid: user.uid
+    assignedTo: user.uid,
+    verifiedEmail: user.email.toLowerCase()
   });
   
-  return { success: true, employeeId: empId };
+  console.log("✅ Employee verified successfully:", empId);
+  return { success: true, employeeId: empId, data: userData };
 }
 
 export async function resetPassword(email) {
@@ -182,4 +271,12 @@ export async function getCurrentUserData() {
   const userRef = doc(db, "users", user.uid);
   const snap = await getDoc(userRef);
   return snap.exists() ? snap.data() : null;
+}
+
+// ✅ DEBUG
+export async function debugAuthState() {
+  const user = auth.currentUser;
+  console.log("Current user:", user?.email || "none");
+  console.log("UID:", user?.uid || "none");
+  return { user: user?.email || null, uid: user?.uid || null };
 }
