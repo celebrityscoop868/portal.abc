@@ -133,14 +133,14 @@ async function createEmployee() {
     }
     
     try {
-        // Check if ID exists
+        // Check if ID exists (document ID es el employeeId)
         const existingId = await getDoc(doc(db, "allowedEmployees", empId));
         if (existingId.exists()) {
             showToast('Employee ID already exists', 'error');
             return;
         }
         
-        // Check if email exists
+        // Check if email exists (query por campo email)
         const emailQuery = query(collection(db, "allowedEmployees"), where("email", "==", email));
         const emailSnap = await getDocs(emailQuery);
         if (!emailSnap.empty) {
@@ -148,7 +148,7 @@ async function createEmployee() {
             return;
         }
         
-        // Create allowedEmployees entry (this is what enables the employee to sign in)
+        // Create allowedEmployees entry (ID del documento = employeeId)
         await setDoc(doc(db, "allowedEmployees", empId), {
             employeeId: empId,
             name: name,
@@ -179,9 +179,6 @@ async function createEmployee() {
             notifications: [],
             chat: []
         });
-        
-        // TODO: Send email to employee with their ID
-        // This would integrate with your email service
         
         showToast(`Employee ${empId} created! Tell them to sign in with Google using ${email}`, 'success');
         
@@ -214,8 +211,8 @@ async function loadAllEmployees() {
         });
         
         employees.sort((a, b) => {
-            const numA = parseInt(a.id.replace('SP', '')) || 0;
-            const numB = parseInt(b.id.replace('SP', '')) || 0;
+            const numA = parseInt(a.employeeId?.replace('SP', '')) || 0;
+            const numB = parseInt(b.employeeId?.replace('SP', '')) || 0;
             return numA - numB;
         });
         
@@ -238,14 +235,14 @@ async function loadAllEmployees() {
             
             item.innerHTML = `
                 <div class="employee-info">
-                    <div class="employee-id">${emp.id}</div>
+                    <div class="employee-id">${emp.employeeId || emp.id}</div>
                     <div class="employee-name">${emp.name || 'No name'}</div>
                     ${emp.email ? `<div class="employee-email">${emp.email}</div>` : ''}
                 </div>
                 <div class="employee-actions">
                     <span class="status-badge ${statusClass}">${statusText}</span>
-                    <button class="btn btn-secondary" onclick="window.loadEmp('${emp.id}')">Load</button>
-                    <button class="btn btn-danger" onclick="window.deleteEmp('${emp.id}')">Delete</button>
+                    <button class="btn btn-secondary" onclick="window.loadEmp('${emp.employeeId || emp.id}')">Load</button>
+                    <button class="btn btn-danger" onclick="window.deleteEmp('${emp.employeeId || emp.id}')">Delete</button>
                 </div>
             `;
             list.appendChild(item);
@@ -632,7 +629,7 @@ async function loadIdPool() {
         let html = '';
         for (let i = 1; i <= 100; i++) {
             const id = 'SP' + i.toString().padStart(3, '0');
-            const doc = snap.docs.find(d => d.id === id);
+            const doc = snap.docs.find(d => d.id === id || d.data().employeeId === id);
             const data = doc ? doc.data() : null;
             
             let statusClass = 'id-available';
