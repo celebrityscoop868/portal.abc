@@ -235,12 +235,18 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
         </div>
     </div>
 
-    <!-- SCREEN: Verification (Employee ID) -->
+    <!-- SCREEN: Verification (Employee ID Gate) -->
     <div id="verifyScreen" style="display:none;">
         <h2 style="margin:0 0 8px;font-size:20px;color:#0d47a1;">Verify Your Account</h2>
         <p style="margin:0 0 18px;color:#555;font-size:14px;line-height:1.5;">
             Welcome! Please enter your Employee ID to complete your account setup. This ID was provided to you by HR.
         </p>
+
+        <div id="verifyInfo" style="background:#dbeafe;border-radius:8px;padding:12px;margin-bottom:16px;display:none;">
+            <div style="font-size:13px;color:#1e40af;">
+                <strong>Email:</strong> <span id="verifyEmail"></span>
+            </div>
+        </div>
 
         <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:6px;">EMPLOYEE ID</label>
         <input 
@@ -286,22 +292,20 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
         </div>
     </div>
 
-    <!-- SCREEN: Not Authorized -->
-    <div id="notAuthScreen" style="display:none;">
+    <!-- SCREEN: Not Registered (Email not in system) -->
+    <div id="notRegisteredScreen" style="display:none;">
         <h2 style="margin:0 0 8px;font-size:20px;color:#c62828;">Account Not Found</h2>
         <p style="margin:0 0 18px;color:#555;font-size:14px;line-height:1.5;">
-            Your email is not registered in our system.<br>
-            Please contact HR to get your Employee ID and account setup.
+            Your email <strong id="notRegEmail"></strong> is not registered in our system.
         </p>
         
         <div style="padding:16px;background:#fff3cd;border-radius:8px;margin-bottom:18px;">
-            <strong>HR Contact:</strong><br>
-            Email: hr@sunpowerc.energy<br>
-            Phone: (800) 876-4321
+            <strong>What to do:</strong><br>
+            Contact your supervisor or HR to get your Employee ID assigned. Once assigned, you can sign in with Google and enter your ID.
         </div>
         
         <button 
-            id="btnTryAgain" 
+            id="btnTryAgainNotReg" 
             type="button"
             style="
             width:100%;
@@ -357,21 +361,22 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
         signInEmail,
         signInGoogle,
         verifyEmployeeId,
-        isAdminUser
+        isAdminUser,
+        signOutNow
     } from "./assets/auth.js";
 
     const yearEl = document.getElementById("year");
     const msg = document.getElementById("msg");
     const loginScreen = document.getElementById("loginScreen");
     const verifyScreen = document.getElementById("verifyScreen");
-    const notAuthScreen = document.getElementById("notAuthScreen");
+    const notRegisteredScreen = document.getElementById("notRegisteredScreen");
 
     yearEl.textContent = new Date().getFullYear();
 
     function showScreen(screen) {
         loginScreen.style.display = 'none';
         verifyScreen.style.display = 'none';
-        notAuthScreen.style.display = 'none';
+        notRegisteredScreen.style.display = 'none';
         if (screen) screen.style.display = 'block';
         uiSetText(msg, "");
     }
@@ -398,28 +403,39 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
         try {
             const result = await signInGoogle();
             
-            // Check if admin
-            const isAdmin = await isAdminUser(result.user);
-            if (isAdmin) {
+            // Admin user → directo a admin
+            if (result.isAdmin) {
                 window.location.href = './admin.html';
                 return;
             }
             
-            if (result.notAuthorized) {
-                showScreen(notAuthScreen);
-                setBusy(false);
+            // Usuario verificado → directo a employee
+            if (result.verified) {
+                window.location.href = './employee.html#progress';
                 return;
             }
             
+            // Necesita verificación → mostrar gate
             if (result.needsVerification) {
                 showScreen(verifyScreen);
                 window.pendingUser = result.user;
+                
+                // Mostrar email en el gate
+                document.getElementById("verifyEmail").textContent = result.email;
+                document.getElementById("verifyInfo").style.display = 'block';
+                
+                // Si tiene employeeId sugerido (está en allowedEmployees), mostrarlo como hint
+                if (result.employeeId) {
+                    document.getElementById("verifyEmpId").placeholder = result.employeeId;
+                }
+                
                 setBusy(false);
                 return;
             }
             
-            // Already verified employee
-            window.location.href = './employee.html#progress';
+            // No debería llegar aquí, pero por si acaso
+            showErr("Unexpected error. Please try again.");
+            setBusy(false);
             
         } catch (e) {
             showErr(e);
@@ -427,7 +443,7 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
         }
     };
 
-    // Email Login
+    // Email Login (solo admin)
     document.getElementById("btnLogin").onclick = async () => {
         uiSetText(msg, "");
         setBusy(true);
@@ -438,13 +454,13 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
             
             const result = await signInEmail(email, pass);
             
-            // Check if admin
+            // Verificar si es admin
             const isAdmin = await isAdminUser(result.user);
             if (isAdmin) {
                 window.location.href = './admin.html';
             } else {
-                // Employee with email login (should be rare)
-                window.location.href = './employee.html#progress';
+                // No debería pasar, pero por si acaso
+                throw new Error("Only admins can use email login");
             }
             
         } catch (e) {
@@ -453,7 +469,7 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
         }
     };
 
-    // Verify Employee ID
+    // Verify Employee ID (desde el gate)
     document.getElementById("btnVerify").onclick = async () => {
         const empId = document.getElementById("verifyEmpId").value.trim().toUpperCase();
         
@@ -477,11 +493,14 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
     };
 
     // Back buttons
-    document.getElementById("btnBackToLogin").onclick = () => {
+    document.getElementById("btnBackToLogin").onclick = async () => {
+        await signOutNow();
         showScreen(loginScreen);
         setBusy(false);
     };
-    document.getElementById("btnTryAgain").onclick = () => {
+    
+    document.getElementById("btnTryAgainNotReg").onclick = async () => {
+        await signOutNow();
         showScreen(loginScreen);
         setBusy(false);
     };
