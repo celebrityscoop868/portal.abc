@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"/>
+    
+    <!-- SEO Meta Tags -->
+    <title>SunPower Employee Portal | Secure Login - Access Your Schedule, Payroll & Benefits</title>
+    <meta name="description" content="SunPower Employee Portal - Secure access to your work schedule, payroll information, benefits, onboarding progress, and company resources. Login for warehouse and corporate employees.">
+    <meta name="keywords" content="SunPower, employee portal, login, schedule, payroll, benefits, onboarding, warehouse jobs, solar energy careers">
+    <meta name="author" content="SunPower Corporation">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://portal.sunpowerc.energy/">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://portal.sunpowerc.energy/">
+    <meta property="og:title" content="SunPower Employee Portal | Secure Login">
+    <meta property="og:description" content="Access your SunPower employee account. View schedules, payroll, benefits, and complete onboarding tasks.">
+    <meta property="og:image" content="https://portal.sunpowerc.energy/assets/og-image.jpg">
+    <meta property="og:site_name" content="SunPower Employee Portal">
+    <meta property="og:locale" content="en_US">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://portal.sunpowerc.energy/">
+    <meta property="twitter:title" content="SunPower Employee Portal | Secure Login">
+    <meta property="twitter:description" content="Access your SunPower employee account. View schedules, payroll, benefits, and complete onboarding tasks.">
+    <meta property="twitter:image" content="https://portal.sunpowerc.energy/assets/og-image.jpg">
+    
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+    <link rel="manifest" href="/assets/site.webmanifest">
+    <meta name="theme-color" content="#1565c0">
+    <meta name="msapplication-TileColor" content="#1565c0">
+    
+    <!-- Preconnect for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <link rel="dns-prefetch" href="https://firebase.googleapis.com">
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="/assets/app.css?v=1005" as="style">
+    <link rel="preload" href="/assets/ui.js" as="script">
+    <link rel="preload" href="/assets/auth.js" as="script">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="/assets/app.css?v=1005">
+    
+    <!-- Structured Data / JSON-LD -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "SunPower Employee Portal",
+        "url": "https://portal.sunpowerc.energy/",
+        "description": "Secure employee portal for SunPower Corporation staff. Access schedules, payroll, benefits, and onboarding resources.",
+        "publisher": {
+            "@type": "Organization",
+            "name": "SunPower Corporation",
+            "url": "https://www.sunpower.com",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https://portal.sunpowerc.energy/assets/logo.png"
+            }
+        },
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://portal.sunpowerc.energy/search?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+    
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "SunPower Corporation",
+        "url": "https://www.sunpower.com",
+        "logo": "https://portal.sunpowerc.energy/assets/logo.png",
+        "sameAs": [
+            "https://www.linkedin.com/company/sunpower-corporation",
+            "https://twitter.com/sunpower",
+            "https://www.facebook.com/sunpower"
+        ],
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+1-800-786-7693",
+            "contactType": "HR Support",
+            "availableLanguage": "English"
+        }
+    }
+    </script>
+    
+    <!-- PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SunPower Portal">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="SunPower Portal">
+    
+    <!-- Security Headers (Meta Equivalent) -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    
+    <!-- Geo Tags -->
+    <meta name="geo.region" content="US">
+    <meta name="geo.placename" content="San Jose, California">
+    
+    <!-- Verification Tags (Placeholder - Add actual codes when available) -->
+    <!-- <meta name="google-site-verification" content="YOUR_CODE"> -->
+    <!-- <meta name="msvalidate.01" content="YOUR_CODE"> -->
+</head>
+
+<body style="margin:0;background:#e9edf2;font-family:system-ui,-apple-system,Segoe UI,Roboto;">
+
+<!-- Skip to Main Content (Accessibility) -->
+<a href="#main-content" class="sr-only" style="position:absolute;left:-9999px;">Skip to main content</a>
+
+<!-- BLUE HEADER -->
+<header style="
+background:linear-gradient(180deg,#0d47a1,#1565c0);
+padding:28px 16px 60px 16px;
+text-align:center;
+color:white;
+font-weight:700;
+font-size:22px;
+letter-spacing:.3px;
+" role="banner">
+    <h1 style="margin:0;font-size:22px;font-weight:700;">SunPower Employee Portal</h1>
+</header>
+
+<!-- MAIN CONTENT -->
+<main id="main-content" style="
+max-width:420px;
+margin:-40px auto 20px;
+padding:22px;
+background:white;
+border-radius:12px;
+box-shadow:0 12px 28px rgba(0,0,0,.12);
+" role="main">
+
+    <h2 style="margin:0 0 8px;font-size:20px;color:#0d47a1;">Log in to SunPower</h2>
+
+    <p style="margin:0 0 18px;color:#555;font-size:14px;line-height:1.5;">
+        Access your schedule, payroll, onboarding and more by securely signing in to your SunPower employee account.
+    </p>
+
+    <!-- Firebase Notice -->
+    <div id="firebaseNotice" style="
+    display:none;
+    background:#fff3cd;
+    color:#856404;
+    padding:12px;
+    border-radius:6px;
+    font-size:13px;
+    margin-bottom:14px;
+    border-left:4px solid #f59e0b;
+    " role="alert" aria-live="polite">
+        <strong>Notice:</strong> System configuration required. Please contact IT support if this persists.
+    </div>
+
+    <!-- Login Form -->
+    <form onsubmit="return false;" aria-label="Login Form">
+        <label for="email" style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:6px;">EMAIL</label>
+        <input 
+            id="email" 
+            type="email" 
+            placeholder="Enter your login email"
+            autocomplete="email"
+            required
+            aria-required="true"
+            aria-describedby="email-help"
+            style="
+            width:100%;
+            padding:14px;
+            margin-bottom:14px;
+            border:1px solid #cfd8dc;
+            border-radius:6px;
+            font-size:15px;
+            transition:border-color 0.2s;
+            "
+        />
+        <input
+            id="pass" 
+            type="password" 
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            required
+            aria-required="true"
+            aria-describedby="pass-help"
+            style="
+            width:100%;
+            padding:14px;
+            margin-bottom:10px;
+            border:1px solid #cfd8dc;
+            border-radius:6px;
+            font-size:15px;
+            transition:border-color 0.2s;
+            "
+        />
+        <div id="pass-help" class="sr-only">Enter Password</div>
+
+        <!-- Show Password Toggle -->
+        <div style="margin:10px 0 18px;">
+            <label style="font-size:13px;color:#444;display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input 
+                    type="checkbox" 
+                    onclick="
+                    const p=document.getElementById('pass');
+                    p.type=p.type==='password'?'text':'password';
+                    this.setAttribute('aria-label', p.type==='password'?'Show password':'Hide password');
+                    "
+                    aria-label="Show password"
+                    style="width:16px;height:16px;cursor:pointer;"
+                > 
+                Show password
+            </label>
+        </div>
+
+        <!-- Login Button -->
+        <button 
+            id="btnLogin" 
+            type="button"
+            style="
+            width:100%;
+            padding:14px;
+            background:#1565c0;
+            color:white;
+            border:none;
+            border-radius:6px;
+            font-size:16px;
+            font-weight:700;
+            cursor:pointer;
+            transition:background 0.2s, transform 0.1s;
+            "
+            aria-label="Log in to your account"
+        >
+            Log in
+        </button>
+    </form>
+
+    <!-- Forgot Password -->
+    <div style="text-align:center;margin-top:14px;">
+        <button 
+            id="btnReset" 
+            type="button"
+            style="
+            background:none;
+            border:none;
+            color:#1565c0;
+            font-size:14px;
+            cursor:pointer;
+            text-decoration:underline;
+            padding:8px;
+            "
+            aria-label="Reset your password"
+        >
+            Forgot your password?
+        </button>
+    </div>
+
+    <hr style="margin:22px 0;border:none;border-top:1px solid #eee;" aria-hidden="true">
+
+    <!-- Google Sign In -->
+    <button 
+        id="btnGoogle" 
+        type="button"
+        style="
+        width:100%;
+        padding:12px;
+        background:white;
+        border:1px solid #cfd8dc;
+        border-radius:6px;
+        font-weight:600;
+        cursor:pointer;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:10px;
+        transition:background 0.2s;
+        "
+        aria-label="Sign in with Google"
+    >
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Sign in with Google
+    </button>
+
+    <!-- Register Link -->
+    <div style="text-align:center;margin-top:18px;font-size:14px;">
+        New here?
+        <button 
+            id="btnRegister" 
+            type="button"
+            style="
+            background:none;
+            border:none;
+            color:#1565c0;
+            font-weight:700;
+            cursor:pointer;
+            text-decoration:underline;
+            padding:4px 8px;
+            "
+            aria-label="Create a new account"
+        >
+            Create account
+        </button>
+    </div>
+
+    <!-- Error Message -->
+    <div 
+        id="msg" 
+        style="color:#c62828;margin-top:12px;font-size:14px;text-align:center;min-height:20px;"
+        role="alert"
+        aria-live="assertive"
+    ></div>
+
+</main>
+
+<!-- Footer -->
+<footer style="text-align:center;color:#777;font-size:13px;margin:20px 0;padding:0 16px;" role="contentinfo">
+    <p style="margin:0 0 8px;">
+        © <span id="year"></span> SunPower Corporation. All rights reserved.
+    </p>
+    <p style="margin:0;font-size:12px;color:#999;">
+        <a href="#privacy" style="color:#999;text-decoration:underline;">Privacy Policy</a> | 
+        <a href="#terms" style="color:#999;text-decoration:underline;">Terms of Use</a> | 
+        <a href="#help" style="color:#999;text-decoration:underline;">Help & Support</a>
+    </p>
+</footer>
+
+<!-- Application Scripts -->
+<script type="module">
+    import { uiSetText, uiShow, uiToast } from "./assets/ui.js";
+    import {
+        authReady,
+        signInEmail,
+        signInGoogle,
+        registerEmail,
+        resetPassword
+    } from "./assets/auth.js";
+
+    import { auth, db, isFirebaseConfigured } from "./assets/firebase.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const yearEl = document.getElementById("year");
+    const msg = document.getElementById("msg");
+    const firebaseNotice = document.getElementById("firebaseNotice");
+    const emailEl = document.getElementById("email");
+    const passEl = document.getElementById("pass");
+
+    const btnLogin = document.getElementById("btnLogin");
+    const btnRegister = document.getElementById("btnRegister");
+    const btnReset = document.getElementById("btnReset");
+    const btnGoogle = document.getElementById("btnGoogle");
+
+    // Set current year
+    yearEl.textContent = new Date().getFullYear();
+
+    function showErr(e) { 
+        uiSetText(msg, e?.message || String(e)); 
+    }
+    
+    function setBusy(b) {
+        btnLogin.disabled = b;
+        btnRegister.disabled = b;
+        btnReset.disabled = b;
+        btnGoogle.disabled = b;
+        btnLogin.textContent = b ? "Signing in..." : "Log in";
+        btnLogin.style.opacity = b ? "0.7" : "1";
+    }
+
+    const EMPLOYEE_DEFAULT_URL = "./employee.html#progress";
+    const ADMIN_URL = "./admin.html";
+    const intent = sessionStorage.getItem("postLoginIntent") || "";
+
+    function goEmployee() {
+        window.location.href = EMPLOYEE_DEFAULT_URL;
+    }
+    
+    function goAdmin() {
+        window.location.href = ADMIN_URL;
+    }
+
+    // Check Firebase configuration
+    try {
+        const ok = await authReady();
+        if (!ok) uiShow(firebaseNotice, true);
+    } catch {
+        uiShow(firebaseNotice, true);
+    }
+
+    async function goNextByRole() {
+        try {
+            if (typeof isFirebaseConfigured === "function" && !isFirebaseConfigured()) {
+                goEmployee();
+                return;
+            }
+        } catch { 
+            goEmployee();
+            return;
+        }
+
+        const user = auth?.currentUser;
+        if (!user) { 
+            goEmployee();
+            return;
+        }
+
+        try {
+            const ref = doc(db, "admins", user.uid);
+            const snap = await getDoc(ref);
+            const d = snap.exists() ? snap.data() : {};
+            const isAdmin = snap.exists() && (d.role === "admin" || d.isAdmin === true);
+            isAdmin ? goAdmin() : goEmployee();
+        } catch { 
+            goEmployee();
+        }
+    }
+
+    async function doLogin() {
+        uiSetText(msg, "");
+        setBusy(true);
+        try {
+            const email = emailEl.value.trim();
+            const pass = passEl.value.trim();
+            if (!email || !pass) throw new Error("Enter email and password.");
+            await signInEmail(email, pass);
+            await goNextByRole();
+        } catch (e) {
+            showErr(e);
+            setBusy(false);
+        }
+    }
+
+    async function doRegister() {
+        uiSetText(msg, "");
+        setBusy(true);
+        try {
+            await registerEmail(emailEl.value.trim(), passEl.value.trim());
+            uiToast("Account created successfully!");
+            await goNextByRole();
+        } catch (e) {
+            showErr(e);
+            setBusy(false);
+        }
+    }
+
+    async function doReset() {
+        uiSetText(msg, "");
+        setBusy(true);
+        try {
+            const email = emailEl.value.trim();
+            if (!email) throw new Error("Please enter your email address first.");
+            await resetPassword(email);
+            uiToast("Password reset email sent. Check your inbox.");
+            setBusy(false);
+        } catch (e) {
+            showErr(e);
+            setBusy(false);
+        }
+    }
+
+    async function doGoogle() {
+        uiSetText(msg, "");
+        setBusy(true);
+        try {
+            await signInGoogle();
+            await goNextByRole();
+        } catch (e) {
+            showErr(e);
+            setBusy(false);
+        }
+    }
+
+    // Event Listeners
+    btnLogin.onclick = doLogin;
+    btnRegister.onclick = doRegister;
+    btnReset.onclick = doReset;
+    btnGoogle.onclick = doGoogle;
+
+    // Enter key support
+    passEl.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            doLogin();
+        }
+    });
+    
+    emailEl.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            passEl.focus();
+        }
+    });
+
+    // Focus email on load
+    if (emailEl) emailEl.focus();
+</script>
+
+</body>
+</html>
+
