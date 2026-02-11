@@ -1,21 +1,14 @@
 // ===============================
-// Firebase (App/Auth/Firestore/Storage)
+// Firebase Config - SUNPOWER PORTAL
 // ===============================
 
-// Firebase core
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-
-// Auth
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-
-// Firestore
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-// Storage
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
 /**
- * ✅ TU CONFIG REAL - sunpower-portal
+ * ✅ CONFIGURACIÓN SUNPOWER-PORTAL (OFICIAL)
  */
 const firebaseConfig = {
   apiKey: "AIzaSyA6kZ4LL22vPr5XeTCdtcnCqfs_2g_jjqw",
@@ -28,14 +21,13 @@ const firebaseConfig = {
 };
 
 // Init
-export const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-
-// ✅ Storage amarrado al mismo app
 export const storage = getStorage(app);
 
-// Used by app (tu app siempre "real" aquí)
 export function isFirebaseConfigured() {
   return true;
 }
+
+export default app;
