@@ -21,7 +21,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyA6kZ4LL22vPr5XeTCdtcnCqfs_2g_jjqw",
   authDomain: "sunpower-portal.firebaseapp.com",
   projectId: "sunpower-portal",
-  storageBucket: "sunpower-portal.firebasestorage.app",
+  storageBucket: "sunpower-portal.appspot.com",
   messagingSenderId: "557829218180",
   appId: "1:557829218180:web:f5ae1a4362e88a271e87d1",
   measurementId: "G-70553ET048"
