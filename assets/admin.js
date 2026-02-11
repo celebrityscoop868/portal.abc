@@ -1,5 +1,5 @@
 // SunPower Admin Portal - Definitive Version
-import { auth, db, isFirebaseConfigured } from "./firebase.js";
+import { auth, db, isFirebaseConfigured } from "/assets/firebase.js";
 import { 
     doc, getDoc, setDoc, updateDoc, deleteDoc, 
     collection, query, where, getDocs, onSnapshot, 
@@ -46,7 +46,7 @@ function showToast(message, type = 'info') {
 async function checkAdminAuth() {
     const user = auth.currentUser;
     if (!user) {
-        window.location.href = './index.html';
+        window.location.href = '/index.html';
         return false;
     }
     
@@ -56,7 +56,7 @@ async function checkAdminAuth() {
     
     if (!adminSnap.exists()) {
         showToast('Access denied: Admin only', 'error');
-        setTimeout(() => window.location.href = './index.html', 2000);
+        setTimeout(() => window.location.href = '/index.html', 2000);
         return false;
     }
     
@@ -726,7 +726,7 @@ export async function initAdminApp() {
     
     $('btnLogout')?.addEventListener('click', async () => {
         await signOut(auth);
-        window.location.href = './index.html';
+        window.location.href = '/index.html';
     });
     
     // Tab-specific loaders
