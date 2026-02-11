@@ -15,7 +15,8 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.5/firebas
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
 /**
- * ✅ CONFIGURACIÓN REAL - SunPower Portal
+ * ✅ CONFIGURACIÓN REAL - sunpower-portal
+ * Desde Firebase Console (captura 2026-02-11)
  */
 const firebaseConfig = {
   apiKey: "AIzaSyA6kZ4LL22vPr5XeTCdtcnCqfs_2g_jjqw",
@@ -27,25 +28,15 @@ const firebaseConfig = {
   measurementId: "G-70553ET048"
 };
 
-// Inicializar Firebase
-let app;
-let auth;
-let db;
-let storage;
+// Init
+export const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
 
-try {
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
-  storage = getStorage(app);
-  console.log("✅ Firebase initialized successfully");
-} catch (error) {
-  console.error("❌ Firebase initialization error:", error);
-  throw error;
-}
+// ✅ Storage amarrado al mismo app
+export const storage = getStorage(app);
 
-export { app, auth, db, storage };
-
+// Used by app (tu app siempre "real" aquí)
 export function isFirebaseConfigured() {
   return true;
 }
