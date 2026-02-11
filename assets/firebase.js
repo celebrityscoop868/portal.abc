@@ -19,16 +19,16 @@ import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-
  * Nota: storageBucket SIEMPRE debe ser *.appspot.com
  */
 const firebaseConfig = {
-  apiKey: "AIzaSyAFWdMujLQ8dDcNhjmtMVOTE7CED8DAI10",
-  authDomain: "portal-empleado-df279.firebaseapp.com",
-  projectId: "portal-empleado-df279",
+  apiKey: "AIzaSyA6kZ4LL22vPr5XeTCdtcnCqfs_2g_jjqw",
+  authDomain: "sunpower-portal.firebaseapp.com",
+  projectId: "sunpower-portal",
 
   // ✅ BUCKET REAL (CORRECTO)
-  storageBucket: "portal-empleado-df279.appspot.com",
+  storageBucket: "sunpower-portal.firebasestorage.app",
 
-  messagingSenderId: "641787761578",
-  appId: "1:641787761578:web:912e2437974c7cb46951d3",
-  measurementId: "G-QS8HGPTNRL"
+  messagingSenderId: "557829218180",
+  appId: "1:557829218180:web:f5ae1a4362e88a271e87d1",
+  measurementId: "G-70553ET048"
 };
 
 // Init
