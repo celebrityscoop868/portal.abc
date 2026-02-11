@@ -45,12 +45,12 @@
     <link rel="dns-prefetch" href="https://firebase.googleapis.com">
     
     <!-- Preload Critical Resources -->
-    <link rel="preload" href="./assets/app.css" as="style">
+    <link rel="preload" href="/assets/app.css" as="style">
     <link rel="preload" href="/assets/ui.js" as="script">
     <link rel="preload" href="/assets/auth.js" as="script">
     
     <!-- Styles -->
-    <link rel="stylesheet" href="./assets/app.css">
+    <link rel="stylesheet" href="/assets/app.css">
     
     <!-- Structured Data / JSON-LD -->
     <script type="application/ld+json">
@@ -355,7 +355,7 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
 
 <!-- Application Scripts -->
 <script type="module">
-    import { uiSetText, uiToast } from "./assets/ui.js";
+    import { uiSetText, uiToast } from "/assets/ui.js";
     import {
         authReady,
         signInEmail,
@@ -363,7 +363,7 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
         verifyEmployeeId,
         isAdminUser,
         signOutNow
-    } from "./assets/auth.js";
+    } from "/assets/auth.js";
 
     const yearEl = document.getElementById("year");
     const msg = document.getElementById("msg");
@@ -405,13 +405,13 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
             
             // Admin user → directo a admin
             if (result.isAdmin) {
-                window.location.href = './admin.html';
+                window.location.href = '/admin.html';
                 return;
             }
             
             // Usuario verificado → directo a employee
             if (result.verified) {
-                window.location.href = './employee.html#progress';
+                window.location.href = '/employee.html#progress';
                 return;
             }
             
@@ -457,7 +457,7 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
             // Verificar si es admin
             const isAdmin = await isAdminUser(result.user);
             if (isAdmin) {
-                window.location.href = './admin.html';
+                window.location.href = '/admin.html';
             } else {
                 // No debería pasar, pero por si acaso
                 throw new Error("Only admins can use email login");
@@ -484,7 +484,7 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
             
             if (result.success) {
                 uiToast("Account verified! Welcome to SunPower.");
-                window.location.href = './employee.html#progress';
+                window.location.href = '/employee.html#progress';
             }
         } catch (e) {
             showErr(e);
@@ -514,7 +514,7 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
         setBusy(true);
         try {
             const { sendPasswordResetEmail } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
-            const { auth } = await import("./assets/firebase.js");
+            const { auth } = await import("/assets/firebase.js");
             await sendPasswordResetEmail(auth, email);
             uiToast("Password reset email sent!");
         } catch (e) {
