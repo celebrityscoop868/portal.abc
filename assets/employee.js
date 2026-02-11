@@ -9,18 +9,14 @@ import { uiSetText, uiToast, escapeHtml } from "./ui.js";
 
 import { 
   doc, getDoc, setDoc, updateDoc, onSnapshot, serverTimestamp,
-  collection, addDoc, query, where, orderBy, getDocs, arrayUnion
+  collection, addDoc, arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 // ---------- Firestore refs ----------
 const PUBLIC_DOC = () => doc(db, "portal", "public");
 const RECORD_DOC = (empId) => doc(db, "employeeRecords", empId);
-const ALLOWED_DOC = (empId) => doc(db, "allowedEmployees", empId);
 const CHAT_DOC = (empId) => doc(db, "chats", empId);
 const TICKETS_COL = () => collection(db, "supportTickets");
-
-// ---------- Config ----------
-const EMP_ID_RANGE = { min: 1, max: 999 };
 
 // ---------- Global State ----------
 let currentUser = null;
@@ -33,23 +29,10 @@ let chatUnsubscribe = null;
 // ---------- Utilities ----------
 function $(id) { return document.getElementById(id); }
 
-function normalizeEmpId(input) {
-  if (!input) return "";
-  let v = input.toString().toUpperCase().trim().replace(/[-_\s]/g, "");
-  if (!v.startsWith("SP")) return "";
-  const nums = v.slice(2);
-  if (!/^\d+$/.test(nums)) return "";
-  return "SP" + nums.padStart(3, '0');
-}
-
-function empIdToNumber(empId) {
-  const m = String(empId || "").toUpperCase().match(/^SP(\d+)$/);
-  if (!m) return null;
-  return Number(m[1]);
-}
-
-function safe(v, fallback = "---") {
-  return (v === undefined || v === null || v === "") ? fallback : v;
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 function fmtDate(d) {
@@ -463,7 +446,6 @@ function renderShiftSelection(userData, saveUserPatch) {
       s.id === "shift_selection" ? { ...s, done: true } : s
     );
     
-    // Unlock next step
     if (steps[1]) steps[1].locked = false;
 
     await saveUserPatch({ 
@@ -569,7 +551,6 @@ function renderFootwear(userData, saveUserPatch, publicData) {
     </div>
   `);
 
-  // Handle checkbox validation
   const checkboxes = ["ack1", "ack2", "ack3", "ack4", "ack5"];
   const btn = $("btnCompleteFootwear");
   
@@ -779,7 +760,7 @@ function renderPhotoBadge(userData) {
   `);
 }
 
-function renderFirstDay(userData, recordData) {
+function renderFirstDay(userData, recordData, saveUserPatch) {
   const status = getStepStatus("firstday", userData);
   
   if (status.isLocked) {
@@ -968,14 +949,12 @@ function renderChat(userData, empId) {
   const input = $("chatInput");
   const sendBtn = $("btnSendChat");
 
-  // Load existing messages
   loadChatMessages(empId);
 
   const sendMessage = async () => {
     const text = input.value.trim();
     if (!text) return;
 
-    // Add to UI immediately
     addMessageToUI(text, "employee", new Date().toLocaleTimeString());
     input.value = "";
 
@@ -1038,7 +1017,6 @@ function addMessageToUI(text, sender, time) {
 async function loadChatMessages(empId) {
   if (!isFirebaseConfigured() || !empId) return;
 
-  // Unsubscribe from previous listener
   if (chatUnsubscribe) {
     chatUnsubscribe();
     chatUnsubscribe = null;
@@ -1055,7 +1033,6 @@ async function loadChatMessages(empId) {
     const data = snap.data();
     const messages = data.messages || [];
 
-    // Clear and rebuild (simple approach)
     container.innerHTML = messages.map(msg => {
       const isEmployee = msg.sender === "employee";
       const time = msg.timestamp?.toDate?.() 
@@ -1089,7 +1066,6 @@ function renderSchedule(recordData) {
   const today = new Date();
   const events = Array.isArray(recordData?.scheduleEvents) ? recordData.scheduleEvents : [];
   
-  // Build calendar
   const y = today.getFullYear();
   const m = today.getMonth();
   const firstDay = new Date(y, m, 1).getDay();
@@ -1097,17 +1073,14 @@ function renderSchedule(recordData) {
   
   let calendarHTML = '<div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center;">';
   
-  // Headers
   ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
     calendarHTML += `<div style="padding: 8px; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase;">${day}</div>`;
   });
   
-  // Empty cells
   for (let i = 0; i < firstDay; i++) {
     calendarHTML += '<div></div>';
   }
   
-  // Days
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const hasEvent = events.some(e => e.date === dateStr);
@@ -1214,394 +1187,4 @@ function renderPayroll(recordData) {
         Direct deposit will be configured during your first day orientation with HR. Please bring a voided check or your bank account and routing numbers to complete setup.
       </p>
       <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-        <div style="display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #f0fdf4; border-radius: 8px; font-size: 13px; color: #166534;">
-          <span>✓</span> Voided check, OR
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #f0fdf4; border-radius: 8px; font-size: 13px; color: #166534;">
-          <span>✓</span> Account + routing number
-        </div>
-      </div>
-    </div>
-  `);
-}
-
-// ---------- HELP & SUPPORT ----------
-
-function renderHelp(publicData, empId, user) {
-  const help = publicData?.help || defaultPublicContent().help;
-  const site = publicData?.site || defaultPublicContent().site;
-
-  setPage("Help & Support", "Contact the SunPower HR team", `
-    <div style="background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #e5e7eb; margin-bottom: 20px;">
-      <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #111827;">HR Department</h3>
-      <div style="display: flex; flex-direction: column; gap: 12px;">
-        <a href="tel:${help.phone.replace(/\D/g, '')}" style="display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 12px; text-decoration: none; color: inherit; transition: all 0.2s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
-          <div style="width: 40px; height: 40px; background: #eff6ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #1d4ed8;">
-            ${azIcon("message")}
-          </div>
-          <div style="flex: 1;">
-            <div style="font-weight: 600; color: #111827;">HR Main Line</div>
-            <div style="font-size: 13px; color: #6b7280;">${help.phone}</div>
-          </div>
-          ${azIcon("chevronRight")}
-        </a>
-
-        <a href="mailto:${help.email}" style="display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 12px; text-decoration: none; color: inherit; transition: all 0.2s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
-          <div style="width: 40px; height: 40px; background: #eff6ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #1d4ed8;">
-            ${azIcon("file")}
-          </div>
-          <div style="flex: 1;">
-            <div style="font-weight: 600; color: #111827;">Email HR</div>
-            <div style="font-size: 13px; color: #6b7280;">${help.email}</div>
-          </div>
-          ${azIcon("chevronRight")}
-        </a>
-
-        <a href="#chat" style="display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 12px; text-decoration: none; color: inherit; transition: all 0.2s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
-          <div style="width: 40px; height: 40px; background: #eff6ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #1d4ed8;">
-            ${azIcon("message")}
-          </div>
-          <div style="flex: 1;">
-            <div style="font-weight: 600; color: #111827;">Live Chat</div>
-            <div style="font-size: 13px; color: #6b7280;">Message HR directly</div>
-          </div>
-          ${azIcon("chevronRight")}
-        </a>
-      </div>
-    </div>
-
-    <div style="background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #e5e7eb; margin-bottom: 20px;">
-      <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #111827;">Department Contacts</h3>
-      <div style="display: flex; flex-direction: column; gap: 12px;">
-        ${[
-          { title: "Site Manager", phone: site.managerPhone, desc: "Facility operations" },
-          { title: "Safety Supervisor", phone: site.safetyPhone, desc: "Safety concerns & incidents" },
-          { title: "Payroll Department", phone: help.phone, desc: "Paychecks, taxes, direct deposit" }
-        ].map(dept => `
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f9fafb; border-radius: 10px;">
-            <div>
-              <div style="font-weight: 600; color: #111827; font-size: 14px;">${dept.title}</div>
-              <div style="font-size: 12px; color: #6b7280; margin-top: 2px;">${dept.desc}</div>
-            </div>
-            <a href="tel:${dept.phone.replace(/\D/g, '')}" style="color: #1d4ed8; font-weight: 600; font-size: 14px; text-decoration: none;">
-              ${dept.phone}
-            </a>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-
-    <div style="background: #fee2e2; border-radius: 12px; padding: 16px; border: 1px solid #fca5a5; margin-bottom: 20px;">
-      <div style="display: flex; align-items: center; gap: 12px; color: #991b1b; margin-bottom: 8px;">
-        ${azIcon("alert")}
-        <div style="font-weight: 600;">Emergency</div>
-      </div>
-      <p style="color: #991b1b; font-size: 14px; line-height: 1.6; margin-bottom: 12px;">
-        For immediate danger or medical emergencies, call 911 first. Then notify your supervisor and HR as soon as possible.
-      </p>
-      <a href="tel:911" style="display: block; width: 100%; padding: 14px; background: #dc2626; color: #fff; text-align: center; border-radius: 10px; text-decoration: none; font-weight: 600;">
-        Call 911 Emergency
-      </a>
-    </div>
-
-    <div style="background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #e5e7eb;">
-      <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #111827;">Submit Support Ticket</h3>
-      <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">
-        For non-urgent requests, submit a ticket and we'll respond within 24 business hours.
-      </p>
-      
-      <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Category</label>
-      <select id="ticketCategory" style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 16px; font-size: 14px;">
-        <option>Payroll Question</option>
-        <option>Benefits Enrollment</option>
-        <option>Schedule Change</option>
-        <option>Safety Concern</option>
-        <option>Technical Issue</option>
-        <option>Other</option>
-      </select>
-
-      <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Message</label>
-      <textarea id="ticketMessage" rows="4" placeholder="Describe your question or concern..." 
-                style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 16px; font-size: 14px; resize: vertical;"></textarea>
-
-      <button id="btnSubmitTicket" style="width: 100%; padding: 14px; background: #1d4ed8; color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;">
-        Submit Ticket
-      </button>
-      <div id="ticketStatus" style="text-align: center; margin-top: 12px; font-size: 13px; color: #6b7280;"></div>
-    </div>
-  `);
-
-  const btn = $("btnSubmitTicket");
-  if (btn && !btn.dataset.wired) {
-    btn.dataset.wired = "1";
-    btn.onclick = async () => {
-      const category = $("ticketCategory").value;
-      const message = $("ticketMessage").value.trim();
-      const status = $("ticketStatus");
-
-      if (!message) {
-        status.textContent = "Please enter a message.";
-        status.style.color = "#dc2626";
-        return;
-      }
-
-      if (!isFirebaseConfigured()) {
-        status.textContent = "Preview mode: ticket not sent.";
-        return;
-      }
-
-      try {
-        await addDoc(TICKETS_COL(), {
-          employeeId: empId || "",
-          userUid: user?.uid || "",
-          userEmail: user?.email || "",
-          category,
-          message,
-          status: "open",
-          createdAt: serverTimestamp()
-        });
-        
-        status.textContent = "Ticket submitted! HR will respond within 24 hours.";
-        status.style.color = "#16a34a";
-        $("ticketMessage").value = "";
-        uiToast("Ticket submitted successfully");
-      } catch (e) {
-        status.textContent = "Error submitting ticket. Please try again.";
-        status.style.color = "#dc2626";
-      }
-    };
-  }
-}
-
-// ---------- ROUTER ----------
-
-function renderRoute(userData, saveUserPatch, publicData, recordData, ctx) {
-  // Update active nav items
-  document.querySelectorAll('.nav-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.route === routeName());
-  });
-
-  const r = routeName();
-
-  switch (r) {
-    case "home":
-      return renderHome(publicData, recordData, userData);
-    case "progress":
-      return renderProgress(userData, recordData);
-    case "shift":
-    case "shift_selection":
-      return renderShiftSelection(userData, saveUserPatch);
-    case "footwear":
-      return renderFootwear(userData, saveUserPatch, publicData);
-    case "i9":
-      return renderI9(userData, saveUserPatch);
-    case "photo_badge":
-      return renderPhotoBadge(userData);
-    case "firstday":
-    case "first_day":
-      return renderFirstDay(userData, recordData);
-    case "schedule":
-      return renderSchedule(recordData);
-    case "payroll":
-      return renderPayroll(recordData);
-    case "chat":
-      return renderChat(userData, ctx?.empId);
-    case "help":
-      return renderHelp(publicData, ctx?.empId, ctx?.user);
-    case "more":
-      // Show mobile more menu or redirect to progress
-      return renderProgress(userData, recordData);
-    default:
-      location.hash = "#home";
-      return;
-  }
-}
-
-// ---------- INITIALIZATION ----------
-
-export async function initEmployeeApp() {
-  const badge = $("userBadge");
-  const statusChip = $("statusShift");
-  const adminBtn = $("btnAdminGo");
-  const logoutBtn = $("btnLogout");
-
-  // Logout handler
-  if (logoutBtn) {
-    logoutBtn.onclick = async () => {
-      if (isFirebaseConfigured()) {
-        const { signOut } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
-        await signOut(auth);
-      }
-      window.location.href = "./index.html";
-    };
-  }
-
-  // Preview mode (no Firebase)
-  if (!isFirebaseConfigured()) {
-    uiSetText(badge, "PREVIEW");
-    if (statusChip) {
-      uiSetText(statusChip, "offline");
-      statusChip.classList.remove("ok");
-    }
-    if (adminBtn) adminBtn.style.display = "none";
-
-    const demoData = {
-      ...defaultUserDoc({ email: "preview@demo", displayName: "Preview User", uid: "preview" }),
-      employeeId: "SP001",
-      status: "active"
-    };
-    
-    const demoPublic = defaultPublicContent();
-    const demoRecord = {
-      appointment: { date: "2024-02-15", time: "8:00 AM", address: "123 Solar Way, Louisville, KY" },
-      scheduleEvents: []
-    };
-
-    const ctx = { empId: "SP001", user: { uid: "preview", email: "preview@demo" } };
-    
-    const savePatch = async () => uiToast("Preview mode: changes not saved");
-
-    if (!location.hash) location.hash = "#home";
-    renderRoute(demoData, savePatch, demoPublic, demoRecord, ctx);
-
-    window.addEventListener("hashchange", () => {
-      renderRoute(demoData, savePatch, demoPublic, demoRecord, ctx);
-    });
-
-    return;
-  }
-
-  // Real Firebase mode
-  onAuth(async (user) => {
-    try {
-      if (!user) {
-        window.location.href = "./index.html";
-        return;
-      }
-
-      currentUser = user;
-
-      // Update UI
-      if (statusChip) {
-        uiSetText(statusChip, "online");
-        statusChip.classList.add("ok");
-      }
-
-      // Check admin
-      const isAdmin = await isAdminUser(user);
-      if (adminBtn) adminBtn.style.display = isAdmin ? "" : "none";
-      if (isAdmin) {
-        adminBtn.onclick = () => window.location.href = "./admin.html";
-      }
-
-      // IMPORTANTE: La verificación ahora se hace en index.html
-      // Si llegamos aquí, el usuario ya está verificado
-      // Pero verificamos por si acaso
-      
-      const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
-      
-      if (!userSnap.exists() || !userSnap.data().verified) {
-        // No debería pasar, pero redirigimos a index para verificar
-        window.location.href = "./index.html";
-        return;
-      }
-
-      const userData = userSnap.data();
-      currentEmpId = userData.employeeId;
-      uiSetText(badge, currentEmpId);
-
-      // Setup real-time listeners
-      const recordRef = RECORD_DOC(currentEmpId);
-      const publicRef = PUBLIC_DOC();
-
-      const saveUserPatch = async (patch) => {
-        await updateDoc(userRef, { ...patch, updatedAt: serverTimestamp() });
-      };
-
-      const ctx = { empId: currentEmpId, user };
-
-      // Listen to public data
-      onSnapshot(publicRef, (snap) => {
-        currentPublicData = snap.exists() 
-          ? { ...defaultPublicContent(), ...snap.data() }
-          : defaultPublicContent();
-        
-        if (currentUserData) {
-          renderRoute(currentUserData, saveUserPatch, currentPublicData, currentRecordData, ctx);
-        }
-      });
-
-      // Listen to record data (from admin)
-      onSnapshot(recordRef, async (snap) => {
-        currentRecordData = snap.exists() ? snap.data() : {};
-        
-        // Sync appointment from admin if needed
-        try {
-          const userSnap = await getDoc(userRef);
-          const userData = userSnap.exists() ? userSnap.data() : {};
-          const userAppt = userData?.appointment;
-          const recAppt = currentRecordData?.appointment;
-          
-          if ((!userAppt?.date) && recAppt?.date) {
-            await updateDoc(userRef, { 
-              appointment: recAppt, 
-              updatedAt: serverTimestamp() 
-            });
-          }
-        } catch (e) { /* ignore sync errors */ }
-
-        if (currentUserData) {
-          renderRoute(currentUserData, saveUserPatch, currentPublicData, currentRecordData, ctx);
-        }
-      });
-
-      // Listen to user data
-      onSnapshot(userRef, (snap) => {
-        if (!snap.exists()) return;
-        
-        const rawData = snap.data();
-        const baseData = defaultUserDoc(user);
-        
-        // Merge steps properly
-        let mergedSteps = Array.isArray(rawData.steps) ? rawData.steps : [];
-        if (mergedSteps.length < baseData.steps.length) {
-          mergedSteps = baseData.steps.map((s, i) => ({
-            ...s,
-            done: rawData.steps?.[i]?.done || false
-          }));
-        }
-
-        currentUserData = {
-          ...baseData,
-          ...rawData,
-          uid: user.uid,
-          steps: mergedSteps,
-          employeeId: currentEmpId
-        };
-
-        if (!location.hash) location.hash = "#home";
-        renderRoute(currentUserData, saveUserPatch, currentPublicData, currentRecordData, ctx);
-      });
-
-      // Hash change handler
-      window.addEventListener("hashchange", () => {
-        if (currentUserData) {
-          renderRoute(currentUserData, saveUserPatch, currentPublicData, currentRecordData, ctx);
-        }
-      });
-
-    } catch (error) {
-      console.error("Init error:", error);
-      uiToast(error?.message || "Error initializing app");
-    }
-  });
-}
-
-// Cleanup on page unload
-window.addEventListener("beforeunload", () => {
-  if (chatUnsubscribe) {
-    chatUnsubscribe();
-    chatUnsubscribe = null;
-  }
-});
+        <div style="display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #f0fdf4; border-radius: 8px; font-size:
