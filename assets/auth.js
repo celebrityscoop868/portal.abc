@@ -1,4 +1,4 @@
-import { auth, db, isFirebaseConfigured } from "./firebase.js";
+import { auth, db, isFirebaseConfigured } from "/assets/firebase.js";
 
 import {
   onAuthStateChanged,
