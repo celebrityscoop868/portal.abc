@@ -23,13 +23,12 @@ export async function authReady() {
 
 export function onAuth(cb) {
   try {
-    return onAuthStateChanged(auth, cb);
+    return onAuthStateChanged?.(auth, cb);
   } catch {
     cb(null);
     return () => {};
   }
 }
-
 /**
  * ✅ FIX CRÍTICO:
  * Antes estabas haciendo setDoc(base, {merge:true}) con appointment/steps vacíos
