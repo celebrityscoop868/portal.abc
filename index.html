@@ -420,15 +420,15 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
         }
 
         try {
-            // Buscar en admins por email (tu estructura actual)
-            const adminsQuery = query(
-                collection(db, "admins"), 
+            // Buscar en admin por email (tu estructura actual)
+            const adminQuery = query(
+                collection(db, "admin"), 
                 where("email", "==", user.email)
             );
-            const adminsSnap = await getDocs(adminsQuery);
+            const adminSnap = await getDocs(adminQuery);
             
-            if (!adminsSnap.empty) {
-                const adminDoc = adminsSnap.docs[0];
+            if (!adminSnap.empty) {
+                const adminDoc = adminSnap.docs[0];
                 const d = adminDoc.data();
                 const isAdmin = d.role === "admin" || d.isAdmin === true;
                 if (isAdmin) {
