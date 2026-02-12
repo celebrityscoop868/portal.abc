@@ -297,7 +297,7 @@ async function loadIdPool() {
 }
 
 // Add new employee to allowed list
-window.addNewEmployee = async function() {
+async function addNewEmployee() {
   const empId = normalizeEmpId(document.getElementById('newEmpId').value);
   const fullName = document.getElementById('newEmpName').value.trim();
   const email = document.getElementById('newEmpEmail').value.trim();
@@ -333,7 +333,10 @@ window.addNewEmployee = async function() {
   document.getElementById('newEmpEmail').value = '';
 
   loadIdPool();
-};
+}
+
+// Exponer al window para el onclick
+window.addNewEmployee = addNewEmployee;
 
 // Tab switching
 function setupTabs() {
@@ -354,7 +357,6 @@ function setupTabs() {
 }
 
 // Initialize
-window.addNewEmployee = addNewEmployee;
 export async function initAdminApp() {
   try {
     // Verificar acceso de admin primero
@@ -389,10 +391,6 @@ export async function initAdminApp() {
   document.getElementById('btnAddEmp')?.addEventListener('click', addNewEmployee);
 
   setupTabs();
-  document.getElementById('btnLoadEmp')?.addEventListener('click', () => {
-    const id = document.getElementById('currentEmpId').value;
-    loadEmployee(id);
-});
 
   // Check auth
   if (!isFirebaseConfigured()) {
