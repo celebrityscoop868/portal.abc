@@ -422,7 +422,7 @@ box-shadow:0 12px 28px rgba(0,0,0,.12);
         try {
             // Buscar en admin por email (tu estructura actual)
             const adminQuery = query(
-                collection(db, "admin"), 
+                collection(db, "admins"), 
                 where("email", "==", user.email)
             );
             const adminSnap = await getDocs(adminQuery);
