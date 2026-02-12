@@ -354,6 +354,7 @@ function setupTabs() {
 }
 
 // Initialize
+window.addNewEmployee = addNewEmployee;
 export async function initAdminApp() {
   try {
     // Verificar acceso de admin primero
@@ -385,8 +386,13 @@ export async function initAdminApp() {
   document.getElementById('btnApproveShift')?.addEventListener('click', () => approveShift(true));
   document.getElementById('btnRejectShift')?.addEventListener('click', () => approveShift(false));
   document.getElementById('btnSendNotif')?.addEventListener('click', sendNotification);
+  document.getElementById('btnAddEmp')?.addEventListener('click', addNewEmployee);
 
   setupTabs();
+  document.getElementById('btnLoadEmp')?.addEventListener('click', () => {
+    const id = document.getElementById('currentEmpId').value;
+    loadEmployee(id);
+});
 
   // Check auth
   if (!isFirebaseConfigured()) {
