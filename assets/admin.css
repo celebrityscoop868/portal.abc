@@ -177,7 +177,7 @@ body {
 }
 
 .current-emp {
-  background: var(--success-500);
+  background: var(--gray-600);
   color: #fff;
   padding: 6px 12px;
   border-radius: var(--radius-full);
@@ -533,27 +533,4 @@ body {
   .form-grid {
     grid-template-columns: 1fr;
   }
-}
-
-/* ============================================
-   UTILITIES
-   ============================================ */
-.gap-12 {
-  gap: 12px;
-}
-
-.flex {
-  display: flex;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.justify-between {
-  justify-content: space-between;
-}
-
-.mt-20 {
-  margin-top: 20px;
 }
